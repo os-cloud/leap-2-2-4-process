@@ -41,12 +41,12 @@ function run_lock {
     fi
   done
 
-  if [ ! -d  "/etc/openstack_deploy/upgrade-newton" ]; then
-      mkdir -p "/etc/openstack_deploy/upgrade-newton"
+  if [ ! -d  "/etc/openstack_deploy/upgrade-leap" ]; then
+      mkdir -p "/etc/openstack_deploy/upgrade-leap"
   fi
 
   upgrade_marker_file=$(basename ${file_part} .yml)
-  upgrade_marker="/etc/openstack_deploy/upgrade-newton/$upgrade_marker_file.complete"
+  upgrade_marker="/etc/openstack_deploy/upgrade-leap/$upgrade_marker_file.complete"
 
   if [ ! -f "$upgrade_marker" ];then
     # note(sigmavirus24): use eval so that we properly turn strings like
@@ -129,6 +129,9 @@ function run_items {
 }
 
 function clone_release {
+    if [[ -d "/opt/openstack-ansible" ]]; then
+      rm -rf "/opt/openstack-ansible"
+    fi
     if [[ -d "/opt/openstack-ansible-$1" ]]; then
       rm -rf "/opt/openstack-ansible-$1"
     fi
@@ -136,6 +139,7 @@ function clone_release {
     pushd /opt/openstack-ansible-$1
       git checkout $1
     popd
+    ln -s "/opt/openstack-ansible-$1" "/opt/openstack-ansible"
 }
 
 ## Main ----------------------------------------------------------------------
@@ -145,12 +149,11 @@ function main {
 
     ### Kilo System Upgrade
     clone_release 11.2.17
+    UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
     pushd "/opt/openstack-ansible-11.2.17"
-      UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
-      ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
-      ${UPGRADE_SCRIPTS}/bootstrap-new-ansible.sh
+      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
       ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
-      ${UPGRADE_SCRIPTS}/new-variable-prep.sh
+      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
       # Convert LDAP variables if any are found
       if grep '^keystone_ldap.*' /etc/openstack_deploy/user_variables.yml;then
         ${UPGRADE_SCRIPTS}/juno-kilo-ldap-conversion.py
@@ -162,7 +165,7 @@ function main {
         fi
       fi
       ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
-      ${UPGRADE_SCRIPTS}/old-variable-remove.sh
+      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
     popd
 
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
@@ -173,11 +176,12 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/horizon-adjustments.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cinder-adjustments.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-extra-migrations.yml")
+#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-extra-migrations.yml")
     if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
     fi
+    python /opt/openstack-ansible-11.2.17/playbooks/inventory/dynamic_inventory.py
     run_items "/opt/openstack-ansible-11.2.17"
     ### Kilo System Upgrade
 
@@ -190,9 +194,11 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/mariadb-apt-cleanup.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/repo-server-pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/disable-neutron-port-security.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-flavor-migration.yml")
+#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-flavor-migration.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cleanup-rabbitmq-vhost.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/glance-db-storage-url-fix.yml")
+    # Run inventory
+    python /opt/openstack-ansible-12.2.8/playbooks/inventory/dynamic_inventory.py
     run_items "/opt/openstack-ansible-12.2.8"
     ### Liberty System Upgrade
 
@@ -205,8 +211,9 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/02_ansible_fact_cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
+#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
+    python /opt/openstack-ansible-13.3.11/playbooks/inventory/dynamic_inventory.py
     run_items "/opt/openstack-ansible-13.3.11"
     ### Mitaka System Upgrade
 
@@ -221,6 +228,7 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
+    python /opt/openstack-ansible-14.0.4/playbooks/inventory/dynamic_inventory.py
     run_items "/opt/openstack-ansible-14.0.4"
     ### Newton Deploy
 
