@@ -14,11 +14,7 @@
 # limitations under the License.
 
 - name: Extra Nova migrations
-  hosts: "nova_api_os_compute[0]"
+  hosts: "[0]"
   gather_facts: false
   user: root
   tasks:
-    - name: Run nova flavor migrations
-      command: nova-manage db migrate_flavor_data
-    - name: Run nova null uuid checks
-      command: nova-manage db null_instance_uuid_scan --delete

@@ -1,0 +1,123 @@
+---
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Sync combined venv and prep
+  hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api[0]:neutron_agent[0]:heat_all[0]:horizon_all[0]"
+  user: root
+  vars:
+    file_name: "{{ venv_tar_location | basename }}"
+  tasks:
+    - name: Install virtualenv-tools
+      pip:
+        name: "git+https://github.com/fireteam/virtualenv-tools@53b6fdbd21851e0bfbc027c53bc0a7697574d90a"
+        state: "present"
+    - synchronize:
+        src: "{{ venv_tar_location }}"
+        dest: "/opt/venvs/{{ file_name }}"
+    - name: Unarchive pre-built venv
+      unarchive:
+        src: "/opt/venvs/{{ file_name }}"
+        dest: "/opt/venvs/{{ file_name.split('.tgz')[0] }}"
+        copy: "no"
+    - name: Rewire venv
+      command: "virtualenv-tools --update-path=auto --reinitialize /opt/venvs/{{ file_name.split('.tgz')[0] }}"
+
+- name: Keystone DB Migrations
+  hosts: "keystone_all[0]"
+  user: root
+  tasks:
+    - name: Perform a Keystone DB sync
+      command: keystone-manage db_sync
+
+- name: Glance DB Migrations
+  hosts: "glance_all[0]"
+  user: root
+  tasks:
+    - name: Perform a Glance DB sync
+      command: glance-manage db_sync
+
+- name: Cinder DB Migrations
+  hosts: "cinder_all[0]"
+  user: root
+  tasks:
+    - name: Perform a cinder DB sync
+      command: cinder-manage db sync
+
+- name: Nova DB Migrations
+  hosts: "nova_api_os_compute[0]"
+  user: root
+  tasks:
+    - name: Perform a Nova DB sync
+      command: nova-manage db sync
+    - name: Run nova flavor migrations
+      command: nova-manage db migrate_flavor_data
+    - name: Run nova null uuid checks
+      command: nova-manage db null_instance_uuid_scan --delete
+
+- name: Neutron DB Migrations
+  hosts: "neutron_agent[0]"
+  user: root
+  vars:
+    neutron_plugins:
+      ml2:
+        plugin_ini: "plugins/ml2/ml2_conf.ini"
+      plumgrid:
+        plugin_ini: "plugins/plumgrid/plumgrid.ini"
+    neutron_system_user_name: "neutron"
+    neutron_db_revision: "head"
+    neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2')]['plugin_ini'] }}"
+    neutron_db_config: "/etc/neutron/neutron.conf"
+  tasks:
+    - name: Perform a Neutron DB Upgrade
+      command: |
+        neutron-db-manage --config-file {{ neutron_db_config }}
+                          --config-file {{ neutron_db_plugin }}
+                          upgrade {{ neutron_db_revision }}
+      sudo: yes
+      sudo_user: "{{ neutron_system_user_name }}"
+    - name: Check for DB revision
+      shell: |
+        neutron-db-manage history | grep -w 'Revision ID: {{ neutron_db_revision }}'
+      register: neutron_dbmanage
+      failed_when: false
+      changed_when: neutron_dbmanage.rc != 0
+      sudo: yes
+      sudo_user: "{{ neutron_system_user_name }}"
+    - name: Perform a Neutron DB Stamp
+      command: |
+        neutron-db-manage --config-file {{ neutron_db_config }}
+                          --config-file {{ neutron_db_plugin }}
+                          stamp {{ neutron_db_revision }}
+      when: neutron_dbmanage.rc != 0
+      sudo: yes
+      sudo_user: "{{ neutron_system_user_name }}"
+
+- name: Heat DB Migrations
+  hosts: "heat_all[0]"
+  user: root
+  tasks:
+    - name: Perform a heat DB sync
+      command: heat-manage db_sync
+
+- name: Horizon DB Migrations
+  hosts: "horizon_all[0]"
+  user: root
+  vars:
+    horizon_system_user_name: "horizon"
+  tasks:
+    - name: Perform a horizon DB sync
+      command: horizon-manage.py syncdb --noinput
+      sudo: yes
+      sudo_user: "{{ horizon_system_user_name }}"
