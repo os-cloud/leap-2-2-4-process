@@ -20,6 +20,4 @@
   user: root
   tasks:
     - name: Remove any of the stored facts ansible may already have
-      command: "{{ upgrade_scripts }}/ansible_fact_cleanup.sh"
-  vars:
-      upgrade_scripts: "{{ osa_playbook_dir }}/scripts"
+      command: "../scripts/ansible_fact_cleanup.sh"

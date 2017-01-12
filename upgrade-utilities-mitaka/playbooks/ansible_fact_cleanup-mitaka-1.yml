@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Extra Nova migrations
-  hosts: "[0]"
+- name: Ansible fact cleanup
+  hosts: localhost
+  connection: local
   gather_facts: false
   user: root
   tasks:
+    - name: Remove any of the stored facts ansible may already have
+      command: "../scripts/ansible_fact_cleanup.sh"
