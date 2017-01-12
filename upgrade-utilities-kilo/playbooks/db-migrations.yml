@@ -114,7 +114,5 @@
     - name: Drop horizon DB - It will be recreated later
       command: "mysql --unbuffered -sNL -e 'drop database {{ horizon_galera_database | default('dash') }}'"
       register: drop_db
-      failed_when:
-        - 'ERROR 1045' in drop_db.stdout
-        - 'ERROR 2005' in drop_db.stdout
+      failed_when: false
       changed_when: drop_db.rc == 0
