@@ -229,6 +229,12 @@ function main {
     run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
     ### Kilo System Upgrade
 
+
+echo "Kilo upgrade success and break point has been hit."
+echo "System Exit to begin working on the next section"
+exit 99
+
+
     ### Liberty System Upgrade
     clone_release ${LIBERTY_RELEASE}
     build_venv ${LIBERTY_RELEASE}
