@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Remove juno log-rotate config
-  hosts: "hosts:all_containers"
+  hosts: "hosts"
   gather_facts: false
   user: root
   tasks:

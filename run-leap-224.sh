@@ -164,32 +164,30 @@ function clone_release {
 
 function build_venv {
     # If the venv exists delete it
-    if [[ -d "/opt/leap42/venvs/openstack-ansible-$1" ]]; then
-      rm -rf "/opt/leap42/venvs/openstack-ansible-$1"
-    fi
+    if [[ ! -d "/opt/leap42/venvs/openstack-ansible-$1" ]]; then
+      # Create venv
+      virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
+      PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
+      pip install pip --upgrade --force-reinstall
 
-    # Create venv
-    virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
-    PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
-    pip install pip --upgrade --force-reinstall
+      # Modern Ansible is needed to run the package lookup
+      pip install "ansible==2.1.1.0"
 
-    # Modern Ansible is needed to run the package lookup
-    pip install "ansible==2.1.1.0"
-
-    # Get package dump from the OSA release
-    PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
-    PACKAGES=$(python <<EOC
+      # Get package dump from the OSA release
+      PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
+      PACKAGES=$(python <<EOC
 import json
 packages = json.loads("""$PKG_DUMP""")
 remote_packages = packages[0]['remote_packages']
 print(' '.join([i for i in remote_packages if 'openstack' in i]))
 EOC)
-    pip install --isolated $PACKAGES
-    deactivate
-    # Create venv archive
-    pushd /opt/leap42/venvs
-      tar -czf "openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1"
-    popd
+      pip install --isolated $PACKAGES
+      deactivate
+      # Create venv archive
+      pushd /opt/leap42/venvs
+        tar -czf "openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1"
+      popd
+    fi
 }
 
 ## Main ----------------------------------------------------------------------
