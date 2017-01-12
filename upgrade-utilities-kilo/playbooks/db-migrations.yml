@@ -29,10 +29,10 @@
     - name: Unarchive pre-built venv
       unarchive:
         src: "/opt/{{ file_name }}"
-        dest: "/opt/{{ file_name.split('.tgz')[0] }}"
+        dest: "/opt"
         copy: "no"
     - name: Rewire venv
-      command: "virtualenv-tools --update-path=auto --reinitialize /opt/venvs/{{ file_name.split('.tgz')[0] }}"
+      command: "virtualenv-tools --update-path=auto --reinitialize /opt/{{ file_name.split('.tgz')[0] }}"
     - name: Set venv fact
       set_fact:
         venv_path: "/opt/{{ file_name.split('.tgz')[0] }}"
