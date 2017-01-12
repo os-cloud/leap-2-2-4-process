@@ -164,7 +164,7 @@ function clone_release {
 
 function build_venv {
     # If the venv exists delete it
-    if [[ ! -d "/opt/leap42/venvs/openstack-ansible-$1.tgz" ]]; then
+    if [[ ! -f "/opt/leap42/venvs/openstack-ansible-$1.tgz" ]]; then
       # Create venv
       virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
       PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
@@ -187,6 +187,8 @@ EOC)
       pushd /opt/leap42/venvs
         tar -czf "openstack-ansible-$1.tgz" "openstack-ansible-$1"
       popd
+    else
+      echo "the venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
 }
 
