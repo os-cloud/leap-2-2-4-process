@@ -35,21 +35,20 @@
             - haproxy
 
       - name: Add new neutron environment memberships
-        command: "{{ playbook_dir }}/../add_new_neutron_env.py {{ repo_root_dir }}"
+        command: "{{ playbook_dir }}/../scripts/add_new_neutron_env.py {{ repo_root_dir }}"
         args:
             creates: /etc/openstack_deploy.KILO/NEUTRON_MIGRATED
 
       - name: Remove old ceilometer environment memberships
-        command: "{{ playbook_dir }}/../fix_ceilometer_env.py"
+        command: "{{ playbook_dir }}/../scripts/fix_ceilometer_env.py"
         args:
             creates: /etc/openstack_deploy.KILO/CEILOMETER_MIGRATED
 
       - name: Update OpenStack variable names
-        command: "{{ playbook_dir }}/../migrate_openstack_vars.py {{ item }} {{ (item | basename)[:-4] }}"
+        command: "{{ playbook_dir }}/../scripts/migrate_openstack_vars.py {{ item }} {{ (item | basename)[:-4] }}"
         args:
             creates: "/etc/openstack_deploy.KILO/VARS_MIGRATED_{{ (item | basename)[:-4] }}"
         with_fileglob:
           - "/etc/openstack_deploy/user_*.yml"
   vars:
-      upgrade_scripts: "{{ osa_playbook_dir }}/scripts"
       repo_root_dir: "{{ osa_playbook_dir }}/"
