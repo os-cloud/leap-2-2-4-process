@@ -236,7 +236,7 @@ function main {
     ### Kilo System Upgrade
 
     ### Liberty System Upgrade
-    if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
+    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
       clone_release ${LIBERTY_RELEASE}
       build_venv ${LIBERTY_RELEASE}
       # Run tasks
