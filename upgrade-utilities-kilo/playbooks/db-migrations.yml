@@ -111,11 +111,10 @@
   hosts: "utility_all[0]"
   user: root
   tasks:
-    - name: Ensure mysql-python is installed
-      pip:
-        name: "mysql-python"
-        state: "present"
-    - name: Drop horizon DB - It will be recreated in our final state
-      mysql_db:
-        name: "{{ horizon_galera_database | default('dash') }}"
-        state: "absent"
+    - name: Drop horizon DB - It will be recreated later
+      command: "mysql --unbuffered -sNL -e 'drop database {{ horizon_galera_database | default('dash') }}'"
+      register: drop_db
+      failed_when:
+        - 'ERROR 1045' in drop_db.stdout
+        - 'ERROR 2005' in drop_db.stdout
+      changed_when: drop_db.rc == 0
