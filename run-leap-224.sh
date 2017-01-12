@@ -185,6 +185,7 @@ EOC)
       deactivate
       # Create venv archive
       pushd /opt/leap42/venvs
+        find "openstack-ansible-$1" -name '*.pyc' -exec rm {} \;
         tar -czf "openstack-ansible-$1.tgz" "openstack-ansible-$1"
       popd
     else
