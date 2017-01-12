@@ -64,13 +64,19 @@
   tasks:
     - name: Perform a Nova DB sync
       command: "{{ venv_path }}/bin/nova-manage db sync"
-    - name: Run nova flavor migrations
-      command: "{{ venv_path }}/bin/nova-manage db migrate_flavor_data --force"
-    - name: Run nova null uuid checks
-      command: "{{ venv_path }}/bin/nova-manage db null_instance_uuid_scan --delete"
+
+- name: Stop Neutron Server
+  hosts: "neutron_server"
+  user: root
+  tasks:
+    - name: Stop Neutron server
+      service:
+        name: "neutron-server"
+        state: stopped
+        pattern: "neutron-server"
 
 - name: Neutron DB Migrations
-  hosts: "neutron_agent[0]"
+  hosts: "neutron_server[0]"
   user: root
   vars:
     neutron_plugins:
@@ -79,24 +85,12 @@
       plumgrid:
         plugin_ini: "plugins/plumgrid/plumgrid.ini"
     neutron_system_user_name: "neutron"
-    neutron_db_revision: "head"
+    neutron_db_revision: "heads"
     neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2')]['plugin_ini'] }}"
     neutron_db_config: "/etc/neutron/neutron.conf"
   tasks:
     - name: Perform a Neutron DB Upgrade
       command: "{{ venv_path }}/bin/neutron-db-manage --config-file {{ neutron_db_config }} --config-file {{ neutron_db_plugin }} upgrade {{ neutron_db_revision }}"
-      sudo: yes
-      sudo_user: "{{ neutron_system_user_name }}"
-    - name: Check for DB revision
-      shell: "{{ venv_path }}/bin/neutron-db-manage history | grep -w 'Revision ID: {{ neutron_db_revision }}'"
-      register: neutron_dbmanage
-      failed_when: false
-      changed_when: neutron_dbmanage.rc != 0
-      sudo: yes
-      sudo_user: "{{ neutron_system_user_name }}"
-    - name: Perform a Neutron DB Stamp
-      command: "{{ venv_path }}/bin/neutron-db-manage --config-file {{ neutron_db_config }} --config-file {{ neutron_db_plugin }} stamp {{ neutron_db_revision }}"
-      when: neutron_dbmanage.rc != 0
       sudo: yes
       sudo_user: "{{ neutron_system_user_name }}"
 
