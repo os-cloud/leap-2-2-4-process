@@ -181,7 +181,7 @@ packages = json.loads("""$PKG_DUMP""")
 remote_packages = packages[0]['remote_packages']
 print(' '.join([i for i in remote_packages if 'openstack' in i]))
 EOC)
-      pip install --isolated $PACKAGES
+      pip install --isolated $PACKAGES mysql-python
       deactivate
       # Create venv archive
       pushd /opt/leap42/venvs
