@@ -25,46 +25,49 @@
         state: "present"
     - synchronize:
         src: "{{ venv_tar_location }}"
-        dest: "/opt/venvs/{{ file_name }}"
+        dest: "/opt/{{ file_name }}"
     - name: Unarchive pre-built venv
       unarchive:
-        src: "/opt/venvs/{{ file_name }}"
-        dest: "/opt/venvs/{{ file_name.split('.tgz')[0] }}"
+        src: "/opt/{{ file_name }}"
+        dest: "/opt/{{ file_name.split('.tgz')[0] }}"
         copy: "no"
     - name: Rewire venv
       command: "virtualenv-tools --update-path=auto --reinitialize /opt/venvs/{{ file_name.split('.tgz')[0] }}"
+    - name: Set venv fact
+      set_fact:
+        venv_path: "/opt/{{ file_name.split('.tgz')[0] }}"
 
 - name: Keystone DB Migrations
   hosts: "keystone_all[0]"
   user: root
   tasks:
     - name: Perform a Keystone DB sync
-      command: keystone-manage db_sync
+      command: "{{ venv_path }}/bin/keystone-manage db_sync"
 
 - name: Glance DB Migrations
   hosts: "glance_all[0]"
   user: root
   tasks:
     - name: Perform a Glance DB sync
-      command: glance-manage db_sync
+      command: "{{ venv_path }}/bin/glance-manage db_sync"
 
 - name: Cinder DB Migrations
   hosts: "cinder_all[0]"
   user: root
   tasks:
     - name: Perform a cinder DB sync
-      command: cinder-manage db sync
+      command: "{{ venv_path }}/bin/cinder-manage db sync"
 
 - name: Nova DB Migrations
   hosts: "nova_api_os_compute[0]"
   user: root
   tasks:
     - name: Perform a Nova DB sync
-      command: nova-manage db sync
+      command: "{{ venv_path }}/bin/nova-manage db sync"
     - name: Run nova flavor migrations
-      command: nova-manage db migrate_flavor_data
+      command: "{{ venv_path }}/bin/nova-manage db migrate_flavor_data"
     - name: Run nova null uuid checks
-      command: nova-manage db null_instance_uuid_scan --delete
+      command: "{{ venv_path }}/bin/nova-manage db null_instance_uuid_scan --delete"
 
 - name: Neutron DB Migrations
   hosts: "neutron_agent[0]"
@@ -81,25 +84,18 @@
     neutron_db_config: "/etc/neutron/neutron.conf"
   tasks:
     - name: Perform a Neutron DB Upgrade
-      command: |
-        neutron-db-manage --config-file {{ neutron_db_config }}
-                          --config-file {{ neutron_db_plugin }}
-                          upgrade {{ neutron_db_revision }}
+      command: "{{ venv_path }}/bin/neutron-db-manage --config-file {{ neutron_db_config }} --config-file {{ neutron_db_plugin }} upgrade {{ neutron_db_revision }}"
       sudo: yes
       sudo_user: "{{ neutron_system_user_name }}"
     - name: Check for DB revision
-      shell: |
-        neutron-db-manage history | grep -w 'Revision ID: {{ neutron_db_revision }}'
+      shell: "{{ venv_path }}/bin/neutron-db-manage history | grep -w 'Revision ID: {{ neutron_db_revision }}'"
       register: neutron_dbmanage
       failed_when: false
       changed_when: neutron_dbmanage.rc != 0
       sudo: yes
       sudo_user: "{{ neutron_system_user_name }}"
     - name: Perform a Neutron DB Stamp
-      command: |
-        neutron-db-manage --config-file {{ neutron_db_config }}
-                          --config-file {{ neutron_db_plugin }}
-                          stamp {{ neutron_db_revision }}
+      command: "{{ venv_path }}/bin/neutron-db-manage --config-file {{ neutron_db_config }} --config-file {{ neutron_db_plugin }} stamp {{ neutron_db_revision }}"
       when: neutron_dbmanage.rc != 0
       sudo: yes
       sudo_user: "{{ neutron_system_user_name }}"
@@ -109,7 +105,7 @@
   user: root
   tasks:
     - name: Perform a heat DB sync
-      command: heat-manage db_sync
+      command: "{{ venv_path }}/bin/heat-manage db_sync"
 
 - name: Horizon DB Migrations
   hosts: "horizon_all[0]"
@@ -118,6 +114,6 @@
     horizon_system_user_name: "horizon"
   tasks:
     - name: Perform a horizon DB sync
-      command: horizon-manage.py syncdb --noinput
+      command: "{{ venv_path }}/bin/horizon-manage.py syncdb --noinput"
       sudo: yes
       sudo_user: "{{ horizon_system_user_name }}"
