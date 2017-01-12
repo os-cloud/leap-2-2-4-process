@@ -20,4 +20,4 @@
   user: root
   tasks:
     - name: Remove any of the stored facts ansible may already have
-      command: "../scripts/ansible_fact_cleanup.sh"
+      command: "{{ playbook_dir }}/../ansible_fact_cleanup.sh"
