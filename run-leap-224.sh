@@ -225,7 +225,7 @@ function main {
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
     fi
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${KILO_RELEASE}.tgz'")
     run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
     ### Kilo System Upgrade
 
@@ -241,7 +241,7 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/disable-neutron-port-security.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cleanup-rabbitmq-vhost.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/glance-db-storage-url-fix.yml")
-#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml")
+#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${LIBERTY_RELEASE}.tgz'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-flavor-migration.yml")
     run_items "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
     ### Liberty System Upgrade
@@ -258,7 +258,7 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
-#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml")
+#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
     run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
     ### Mitaka System Upgrade
@@ -274,7 +274,7 @@ function main {
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
-#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml")
+#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
     run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
     ### Newton Deploy
 
