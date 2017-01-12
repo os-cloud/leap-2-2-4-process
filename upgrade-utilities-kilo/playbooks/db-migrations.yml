@@ -107,10 +107,14 @@
     - name: Perform a heat DB sync
       command: "{{ venv_path }}/bin/heat-manage db_sync"
 
-- name: Horizon DB Migrations
+- name: Horizon DB drop
   hosts: "utility_all[0]"
   user: root
   tasks:
+    - name: Ensure mysql-python is installed
+      pip:
+        name: "mysql-python"
+        state: "present"
     - name: Drop horizon DB - It will be recreated in our final state
       mysql_db:
         name: "{{ horizon_galera_database | default('dash') }}"
