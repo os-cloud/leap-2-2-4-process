@@ -108,6 +108,17 @@ function pre_flight {
     else
       exit 99
     fi
+
+    mkdir -p /opt/leap42/venvs
+
+    pushd /opt/leap42
+      # Using this lookup plugin because it allows us to complile exact service releaes and build a complete venv from it
+      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py
+      chmod +x py_pkgs.py
+    popd
+
+    # Install virtual env for building migration venvs
+    pip install "virtualenv==15.1.0" --isolated --upgrade
 }
 
 function run_items {
@@ -122,7 +133,7 @@ function run_items {
       pushd playbooks
         # Run the tasks in order
         for item in ${!RUN_TASKS[@]}; do
-          echo "Running:" "run_lock $item" "${RUN_TASKS[$item]}"
+          run_lock $item "${RUN_TASKS[$item]}"
         done
       popd
     popd
@@ -132,14 +143,44 @@ function clone_release {
     if [[ -d "/opt/openstack-ansible" ]]; then
       rm -rf "/opt/openstack-ansible"
     fi
-    if [[ -d "/opt/openstack-ansible-$1" ]]; then
-      rm -rf "/opt/openstack-ansible-$1"
+    if [[ -d "/opt/leap42/openstack-ansible-$1" ]]; then
+      rm -rf "/opt/leap42/openstack-ansible-$1"
     fi
-    git clone https://git.openstack.org/openstack/openstack-ansible /opt/openstack-ansible-$1
-    pushd /opt/openstack-ansible-$1
+    git clone https://git.openstack.org/openstack/openstack-ansible /opt/leap42/openstack-ansible-$1
+    pushd /opt/leap42/openstack-ansible-$1
       git checkout $1
     popd
-    ln -s "/opt/openstack-ansible-$1" "/opt/openstack-ansible"
+    ln -s "/opt/leap42/openstack-ansible-$1" "/opt/openstack-ansible"
+}
+
+function build_venv {
+    # If the venv exists delete it
+    if [[ -d "/opt/leap42/venvs/openstack-ansible-$1" ]]; then
+      rm -rf "/opt/leap42/venvs/openstack-ansible-$1"
+    fi
+
+    # Create venv
+    virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
+    PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
+    pip install pip --upgrade --force-reinstall
+
+    # Modern Ansible is needed to run the package lookup
+    pip install "ansible==2.1.1.0"
+
+    # Get package dump from the OSA release
+    PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
+    PACKAGES=$(python <<EOC
+import json
+packages = json.loads("""$PKG_DUMP""")
+remote_packages = packages[0]['remote_packages']
+print(' '.join([i for i in remote_packages if 'openstack' in i]))
+EOC)
+    pip install --isolated $PACKAGES
+    deactivate
+    # Create venv archive
+    pushd /opt/leap42/venvs
+      tar -czf "openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1"
+    popd
 }
 
 ## Main ----------------------------------------------------------------------
@@ -149,11 +190,12 @@ function main {
 
     ### Kilo System Upgrade
     clone_release 11.2.17
+    build_venv 11.2.17
     UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
-    pushd "/opt/openstack-ansible-11.2.17"
-      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
+    pushd "/opt/leap42/openstack-ansible-11.2.17"
+      SCRIPTS_PATH="/opt/leap42/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
       ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
-      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
+      SCRIPTS_PATH="/opt/leap42/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
       # Convert LDAP variables if any are found
       if grep '^keystone_ldap.*' /etc/openstack_deploy/user_variables.yml;then
         ${UPGRADE_SCRIPTS}/juno-kilo-ldap-conversion.py
@@ -165,81 +207,87 @@ function main {
         fi
       fi
       ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
-      SCRIPTS_PATH="/opt/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
+      SCRIPTS_PATH="/opt/leap42/openstack-ansible-11.2.17/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-11.2.17" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
     popd
 
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments.yml")
-    RUN_TASKS+=("haproxy-install.yml || true")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-11.2.17'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/keystone-adjustments.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/horizon-adjustments.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cinder-adjustments.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
-#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-extra-migrations.yml")
+
+
+#### Run these when we do a proper DB migration
+#RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-extra-migrations.yml")
+
+
     if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
     fi
-    python /opt/openstack-ansible-11.2.17/playbooks/inventory/dynamic_inventory.py
-    run_items "/opt/openstack-ansible-11.2.17"
+    python /opt/leap42/openstack-ansible-11.2.17/playbooks/inventory/dynamic_inventory.py
+    run_items "/opt/leap42/openstack-ansible-11.2.17"
     ### Kilo System Upgrade
 
     ### Liberty System Upgrade
     clone_release 12.2.8
+    build_venv 12.2.8
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-liberty/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-12.2.8'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-12.2.8'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-12.2.8'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/mariadb-apt-cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/repo-server-pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/disable-neutron-port-security.yml")
-#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-flavor-migration.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cleanup-rabbitmq-vhost.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/glance-db-storage-url-fix.yml")
+
+
+#### Run these when we do a proper DB migration
+#RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/nova-flavor-migration.yml")
+
+
     # Run inventory
-    python /opt/openstack-ansible-12.2.8/playbooks/inventory/dynamic_inventory.py
-    run_items "/opt/openstack-ansible-12.2.8"
+    python /opt/leap42/openstack-ansible-12.2.8/playbooks/inventory/dynamic_inventory.py
+    run_items "/opt/leap42/openstack-ansible-12.2.8"
     ### Liberty System Upgrade
 
     ### Mitaka System Upgrade
     clone_release 13.3.11
+    build_venv 13.3.11
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/01_ansible_fact_cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-13.3.11'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-13.3.11'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-13.3.11'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/02_ansible_fact_cleanup.yml")
-#    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-13.3.11'")
+
+
+#### Run these when we do a proper DB migration
+#RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
+
+
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
-    python /opt/openstack-ansible-13.3.11/playbooks/inventory/dynamic_inventory.py
-    run_items "/opt/openstack-ansible-13.3.11"
+    python /opt/leap42/openstack-ansible-13.3.11/playbooks/inventory/dynamic_inventory.py
+    run_items "/opt/leap42/openstack-ansible-13.3.11"
     ### Mitaka System Upgrade
 
     ### Newton Deploy
     clone_release 14.0.4
+    build_venv 14.0.4
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-newton/playbooks"
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/mariadb-apt-cleanup.yml")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-14.0.4'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-14.0.4'")
+    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-14.0.4'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility.yml")
-    python /opt/openstack-ansible-14.0.4/playbooks/inventory/dynamic_inventory.py
-    run_items "/opt/openstack-ansible-14.0.4"
+    python /opt/leap42/openstack-ansible-14.0.4/playbooks/inventory/dynamic_inventory.py
+    run_items "/opt/leap42/openstack-ansible-14.0.4"
     ### Newton Deploy
 
     ### Run the redeploy tasks
     RUN_TASKS+=("setup-everything.yml")
-    pushd ${MAIN_PATH}/playbooks
-        # Run the tasks in order
-        for item in ${!RUN_TASKS[@]}; do
-          run_lock $item "${RUN_TASKS[$item]}"
-        done
-    popd
+    run_items "/opt/openstack-ansible"
     ### Run the redeploy tasks
 }
 

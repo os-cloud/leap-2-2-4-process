@@ -60,5 +60,5 @@
           - key: "default_bind_mount_logs"
             value: false
   vars:
-      upgrade_scripts: "{{ playbook_dir }}/../scripts"
-      repo_root_dir: "{{ playbook_dir }}/../../../"
+      upgrade_scripts: "{{ osa_playbook_dir }}/scripts"
+      repo_root_dir: "{{ osa_playbook_dir }}/"

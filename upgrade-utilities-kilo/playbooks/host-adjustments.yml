@@ -19,33 +19,6 @@
   gather_facts: false
   user: root
   tasks:
-    - name: find containers in /var/lib/lxc
-      command: "find /var/lib/lxc -maxdepth 2 -type f -name 'config'"
-      register: containers
-    - name: Fix the basic container network
-      shell: |
-        OLD_ETH0="$(grep '^lxc.network.name = eth0' -A1 -B3 {{ item }})"
-        sed -i '/^lxc.network.*/d' {{ item }}
-        echo "${OLD_ETH0}" | tee -a {{ item }}
-      with_items: containers.stdout_lines
-      register: container_eth0
-    - lineinfile:
-        dest: "{{ item }}"
-        line: "lxc.group = openstack"
-        regexp: "^lxc.group"
-      with_items: containers.stdout_lines
-    - name: Remove add_network_interface.conf entry
-      lineinfile:
-        dest: "{{ item }}"
-        state: "absent"
-        regexp: 'add_network_interface\.conf'
-      with_items: containers.stdout_lines
-    - name: Remove old add_network_interface.conf file
-      file:
-        path: "{{ item | dirname }}/add_network_interface.conf"
-        state: "absent"
-      failed_when: false
-      with_items: containers.stdout_lines
     - name: Remove old lxc cache files
       file:
         path: "{{ item }}"

@@ -51,5 +51,5 @@
         with_fileglob:
           - "/etc/openstack_deploy/user_*.yml"
   vars:
-      upgrade_scripts: "{{ playbook_dir }}/../scripts"
-      repo_root_dir: "{{ playbook_dir }}/../../../"
+      upgrade_scripts: "{{ osa_playbook_dir }}/scripts"
+      repo_root_dir: "{{ osa_playbook_dir }}/"

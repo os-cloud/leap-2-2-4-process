@@ -22,4 +22,4 @@
     - name: Remove any of the stored facts ansible may already have
       command: "{{ upgrade_scripts }}/ansible_fact_cleanup.sh"
   vars:
-      upgrade_scripts: "{{ playbook_dir }}/../scripts"
+      upgrade_scripts: "{{ osa_playbook_dir }}/scripts"

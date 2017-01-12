@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Set hostname alias for local lookup compatibility
-  hosts: all
+  hosts: "hosts"
   gather_facts: true
   tasks:
     - name: Update Alias hostnames

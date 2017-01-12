@@ -13,18 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- hosts: all
+- hosts: hosts
   connection: local
-  vars_prompt:
-    - name: destroy_ok
-      prompt: |
-        "The following actions are destructive and remove items from your
-        database. Would you like to continue ? (yes/no)"
-      private: no
-      default: "no"
   tasks:
     - set_fact:
-        destroy: "{{ destroy_ok }}"
+        destroy: "true"
 
 - name: Cleanup heat services through the database
   hosts: galera_all[0]
