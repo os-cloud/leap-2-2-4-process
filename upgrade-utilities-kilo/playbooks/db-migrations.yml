@@ -110,10 +110,8 @@
 - name: Horizon DB Migrations
   hosts: "horizon_all[0]"
   user: root
-  vars:
-    horizon_system_user_name: "horizon"
   tasks:
-    - name: Perform a horizon DB sync
-      command: "{{ venv_path }}/bin/horizon-manage.py syncdb --noinput"
-      sudo: yes
-      sudo_user: "{{ horizon_system_user_name }}"
+    - name: Drop horizon DB - It will be recreated in our final state
+      mysql_db:
+        name: "{{ horizon_galera_database | default('dash') }}"
+        state: "absent"
