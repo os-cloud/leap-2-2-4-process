@@ -197,7 +197,10 @@ EOC)
     else
       echo "the venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
-    openstack-ansible upgrade-utilities/venv-prep.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz'
+    VENV_PREP="$(pwd)/upgrade-utilities/venv-prep.yml"
+    pushd /opt/leap42/openstack-ansible-$1/playbooks
+      openstack-ansible ${VENV_PREP} -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+    popd
 }
 
 ## Main ----------------------------------------------------------------------
