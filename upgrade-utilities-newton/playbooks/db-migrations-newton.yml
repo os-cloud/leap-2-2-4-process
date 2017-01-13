@@ -13,30 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Sync combined venv and prep
-  hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api_os_compute[0]:neutron_server[0]:heat_all[0]:ironic_conductor[0]"
-  user: root
-  vars:
-    file_name: "{{ venv_tar_location | basename }}"
-  tasks:
-    - name: Install virtualenv-tools
-      pip:
-        name: "git+https://github.com/fireteam/virtualenv-tools@53b6fdbd21851e0bfbc027c53bc0a7697574d90a#egg=virtualenv-tools"
-        state: "present"
-    - synchronize:
-        src: "{{ venv_tar_location }}"
-        dest: "/opt/{{ file_name }}"
-    - name: Unarchive pre-built venv
-      unarchive:
-        src: "/opt/{{ file_name }}"
-        dest: "/opt"
-        copy: "no"
-    - name: Rewire venv
-      command: "virtualenv-tools --update-path=auto /opt/{{ file_name.split('.tgz')[0] }}"
-    - name: Set venv fact
-      set_fact:
-        venv_path: "/opt/{{ file_name.split('.tgz')[0] }}"
-
 - name: Keystone DB Migrations
   hosts: "keystone_all[0]"
   user: root
