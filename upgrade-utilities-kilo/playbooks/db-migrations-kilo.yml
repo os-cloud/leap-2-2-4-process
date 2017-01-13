@@ -41,7 +41,7 @@
   hosts: "keystone_all[0]"
   user: root
   tasks:
-    - name: Perform a Keystone DB sync
+    - name: Perform a Keystone DB sync 67
       command: "{{ venv_path }}/bin/keystone-manage db_sync"
 
 - name: Glance DB Migrations

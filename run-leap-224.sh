@@ -152,9 +152,6 @@ function run_items {
 }
 
 function clone_release {
-    if [[ -d "/opt/openstack-ansible" ]]; then
-      rm -rf "/opt/openstack-ansible"
-    fi
     if [[ -d "/opt/leap42/openstack-ansible-$1" ]]; then
       rm -rf "/opt/leap42/openstack-ansible-$1"
     fi
@@ -162,7 +159,13 @@ function clone_release {
     pushd /opt/leap42/openstack-ansible-$1
       git checkout $1
     popd
-    ln -s "/opt/leap42/openstack-ansible-$1" "/opt/openstack-ansible"
+}
+
+function link_release {
+    if [[ -d "/opt/openstack-ansible" ]]; then
+      mv "/opt/openstack-ansible" "/opt/openstack-ansible.bak"
+    fi
+    ln -sf "/opt/leap42/openstack-ansible-$1" "/opt/openstack-ansible"
 }
 
 function build_venv {
@@ -184,7 +187,7 @@ packages = json.loads("""$PKG_DUMP""")
 remote_packages = packages[0]['remote_packages']
 print(' '.join([i for i in remote_packages if 'openstack' in i]))
 EOC)
-      pip install --isolated $PACKAGES mysql-python
+      pip install --isolated $PACKAGES mysql-python vine
       deactivate
       # Create venv archive
       pushd /opt/leap42/venvs
@@ -222,49 +225,56 @@ function main {
     ### Kilo System Upgrade
     # Run tasks
     UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
-    pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
-      SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
-      ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
-      SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
-      # Convert LDAP variables if any are found
-      if grep '^keystone_ldap.*' /etc/openstack_deploy/user_variables.yml;then
-        ${UPGRADE_SCRIPTS}/juno-kilo-ldap-conversion.py
-      fi
-      # Create the repo servers entries from the same entries found within the infra_hosts group.
-      if ! grep -r '^repo-infra_hosts\:' /etc/openstack_deploy/openstack_user_config.yml /etc/openstack_deploy/conf.d/;then
-        if [ ! -f "/etc/openstack_deploy/conf.d/repo-servers.yml" ];then
-          ${UPGRADE_SCRIPTS}/juno-kilo-add-repo-infra.py
+    # If the kilo leap has been accomplished, skip.
+    if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
+      link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+      pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
+        ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
+        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
+        # Convert LDAP variables if any are found
+        if grep '^keystone_ldap.*' /etc/openstack_deploy/user_variables.yml;then
+          ${UPGRADE_SCRIPTS}/juno-kilo-ldap-conversion.py
         fi
+        # Create the repo servers entries from the same entries found within the infra_hosts group.
+        if ! grep -r '^repo-infra_hosts\:' /etc/openstack_deploy/openstack_user_config.yml /etc/openstack_deploy/conf.d/;then
+          if [ ! -f "/etc/openstack_deploy/conf.d/repo-servers.yml" ];then
+            ${UPGRADE_SCRIPTS}/juno-kilo-add-repo-infra.py
+          fi
+        fi
+        ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
+        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
+      popd
+      UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
+      if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
+        RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
+        RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
       fi
-      ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
-      SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
-    popd
-    UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
-    if [ "$(ansible 'swift_hosts' --list-hosts)" != "No hosts matched" ]; then
-      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-ring-adjustments.yml")
-      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/swift-repo-adjustments.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-kilo.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${KILO_RELEASE}.tgz'")
+      run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+      touch "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap"
     fi
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-kilo.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${KILO_RELEASE}.tgz'")
-    run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
-    touch "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap"
     ### Kilo System Upgrade
 
     ### Liberty System Upgrade
     # Run tasks
-    UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-liberty/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/mariadb-apt-cleanup.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/disable-neutron-port-security.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cleanup-rabbitmq-vhost.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/glance-db-storage-url-fix.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-liberty.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${LIBERTY_RELEASE}.tgz'")
-    run_items "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
-    touch "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap"
+    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+      link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
+      UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-liberty/playbooks"
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/mariadb-apt-cleanup.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/disable-neutron-port-security.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/cleanup-rabbitmq-vhost.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/glance-db-storage-url-fix.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-liberty.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${LIBERTY_RELEASE}.tgz'")
+      run_items "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
+      touch "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap"
+    fi
     ### Liberty System Upgrade
 
 echo "Liberty upgrade success and break point has been hit."
@@ -273,6 +283,7 @@ exit 99
 
     ### Mitaka System Upgrade
     # Run tasks
+    link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-1.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
@@ -289,6 +300,7 @@ exit 99
 
     ### Newton Deploy
     # Run tasks
+    link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
     UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-newton/playbooks"
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
     RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
