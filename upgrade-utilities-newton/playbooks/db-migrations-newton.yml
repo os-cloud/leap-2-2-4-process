@@ -14,7 +14,7 @@
 # limitations under the License.
 
 - name: Sync combined venv and prep
-  hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api_os_compute[0]:neutron_agent[0]:heat_all[0]"
+  hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api_os_compute[0]:neutron_server[0]:heat_all[0]:ironic_conductor[0]"
   user: root
   vars:
     file_name: "{{ venv_tar_location | basename }}"
@@ -64,6 +64,8 @@
   tasks:
     - name: Perform a Nova DB sync
       command: "{{ venv_path }}/bin/nova-manage db sync"
+    - name: Perform Nova online data migrations
+      command: "{{ venv_path }}/nova-manage db online_data_migrations"
 
 - name: Stop Neutron Server
   hosts: "neutron_server"
@@ -84,6 +86,8 @@
         plugin_ini: "plugins/ml2/ml2_conf.ini"
       plumgrid:
         plugin_ini: "plugins/plumgrid/plumgrid.ini"
+      nuage:
+        plugin_ini: "plugins/nuage/nuage.ini"
     neutron_system_user_name: "neutron"
     neutron_db_revision: "heads"
     neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2')]['plugin_ini'] }}"
@@ -110,3 +114,17 @@
       register: drop_db
       failed_when: false
       changed_when: drop_db.rc == 0
+
+- name: AODH DB Migrations
+  hosts: "aodh_all[0]"
+  user: root
+  tasks:
+    - name: Perform a Aodh DB sync
+      command: "{{ aodh_bin }}/aodh-dbsync"
+
+- name: Ironic DB Migrations
+  hosts: "ironic_conductor[0]"
+  user: root
+  tasks:
+    - name: Update database schema
+      command: "{{ venv_path }}/ironic-dbsync upgrade"

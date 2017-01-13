@@ -277,40 +277,46 @@ function main {
     fi
     ### Liberty System Upgrade
 
-echo "Liberty upgrade success and break point has been hit."
-echo "System Exit to begin working on the next section"
-exit 99
-
     ### Mitaka System Upgrade
     # Run tasks
-    link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
-    UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-1.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-mitaka.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-2.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
-#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
-    run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
-    touch "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap"
+    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+      link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
+      UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-1.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-mitaka.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-2.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
+      run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
+      touch "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap"
+    fi
     ### Mitaka System Upgrade
+
+echo -e "\n====================================================="
+echo "Mitaka upgrade success and break point has been hit."
+echo "System Exit to begin working on the next section"
+echo -e "=====================================================\n"
+exit 99
 
     ### Newton Deploy
     # Run tasks
-    link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-    UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-newton/playbooks"
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
-    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-newton.yml")
-#### This needs to be written    RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
-    run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-    touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap"
+    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+      link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+      UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-newton/playbooks"
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-newton.yml")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
+      run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+      touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap"
+    fi
     ### Newton Deploy
 
     ### Run the redeploy tasks
