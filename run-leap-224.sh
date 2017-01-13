@@ -125,6 +125,9 @@ function pre_flight {
 
     # Install virtual env for building migration venvs
     pip install "virtualenv==15.1.0" --isolated --upgrade
+
+    # Install liberasurecode-dev which will be used in the venv creation process
+    apt-get update && apt-get -y install liberasurecode-dev
 }
 
 function run_items {
