@@ -198,7 +198,7 @@ EOC)
       echo "the venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
     VENV_PREP="$(pwd)/upgrade-utilities/venv-prep.yml"
-    pushd /opt/leap42/openstack-ansible-$1/playbooks
+    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment
       openstack-ansible ${VENV_PREP} -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
 }
@@ -231,6 +231,7 @@ function main {
     UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
     # If the kilo leap has been accomplished, skip.
     if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
+      echo 'Running kilo leap'
       link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
       pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
@@ -266,6 +267,7 @@ function main {
     ### Liberty System Upgrade
     # Run tasks
     if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+      echo 'Running liberty leap'
       link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-liberty/playbooks"
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
@@ -283,7 +285,12 @@ function main {
 
     ### Mitaka System Upgrade
     # Run tasks
-    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+    if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
+      echo 'Running mitaka leap'
+      # In mitaka we need to mark the network used for container ssh and management.
+      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_container_address: true' /etc/openstack_deploy/openstack_user_config.yml
+      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_ssh_address: true' /etc/openstack_deploy/openstack_user_config.yml
+
       link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-1.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
@@ -308,7 +315,8 @@ exit 99
 
     ### Newton Deploy
     # Run tasks
-    if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
+    if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]]; then
+      echo 'Running newton leap'
       link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-newton/playbooks"
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
