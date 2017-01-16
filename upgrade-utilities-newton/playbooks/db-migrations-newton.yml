@@ -68,7 +68,13 @@
   user: root
   vars:
     neutron_plugins:
-      ml2:
+      ml2.lxb:
+        plugin_ini: "plugins/ml2/ml2_conf.ini"
+      ml2.ovs:
+        plugin_ini: "plugins/ml2/ml2_conf.ini"
+      ml2.ovs.dvr:
+        plugin_ini: "plugins/ml2/ml2_conf.ini"
+      ml2.calico:
         plugin_ini: "plugins/ml2/ml2_conf.ini"
       plumgrid:
         plugin_ini: "plugins/plumgrid/plumgrid.ini"
@@ -76,7 +82,7 @@
         plugin_ini: "plugins/nuage/nuage.ini"
     neutron_system_user_name: "neutron"
     neutron_db_revision: "heads"
-    neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2')]['plugin_ini'] }}"
+    neutron_db_plugin: "/etc/neutron/{{ neutron_plugins[neutron_plugin_type | default('ml2.lxb')]['plugin_ini'] }}"
     neutron_db_config: "/etc/neutron/neutron.conf"
   tasks:
     - name: Perform a Neutron DB Upgrade
