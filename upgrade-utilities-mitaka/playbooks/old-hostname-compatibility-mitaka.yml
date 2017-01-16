@@ -60,4 +60,4 @@
     - name: Run database clean up for rfc1034/5
       command: >
         mysql --verbose --unbuffered -e "delete from service where host like '%\_%';" heat
-      when: destroy | bool
+      failed_when: false
