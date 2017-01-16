@@ -136,8 +136,8 @@ function run_items {
       # Before running anything execute inventory to ensure functionality
       python playbooks/inventory/dynamic_inventory.py > /dev/null
 
+      # Install the releases global requirements
       if [[ -f "global-requirement-pins.txt" ]]; then
-        # Install the releases global requirements
         pip install --upgrade --isolated --force-reinstall --requirement global-requirement-pins.txt
       fi
 
@@ -204,6 +204,12 @@ EOC)
     fi
     VENV_PREP="$(pwd)/upgrade-utilities/venv-prep.yml"
     pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment
+      # If the ansible-playbook command is not found this will bootstrap the system
+      if ! which ansible-playbook; then
+        pushd "/opt/leap42/openstack-ansible-$1"
+          bash scripts/bootstrap-ansible.sh  # install ansible because it's not currently ready
+        popd
+      fi
       openstack-ansible ${VENV_PREP} -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
 }
