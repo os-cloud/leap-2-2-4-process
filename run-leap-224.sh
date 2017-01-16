@@ -322,12 +322,6 @@ function main {
     fi
     ### Mitaka System Upgrade
 
-echo -e "\n====================================================="
-echo "Mitaka upgrade success and break point has been hit."
-echo "System Exit to begin working on the next section"
-echo -e "=====================================================\n"
-exit 99
-
     ### Newton Deploy
     # Run tasks
     if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]]; then
@@ -340,11 +334,17 @@ exit 99
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-collation-alter.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-newton.yml")
-      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-newton.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
       run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
       touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap"
     fi
     ### Newton Deploy
+
+echo -e "\n====================================================="
+echo "Newton upgrade success and break point has been hit."
+echo "System Exit to begin working on the next section"
+echo -e "=====================================================\n"
+exit 99
 
     ### Run the redeploy tasks
     RUN_TASKS+=("setup-everything.yml")
