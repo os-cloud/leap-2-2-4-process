@@ -288,8 +288,12 @@ function main {
     if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
       echo 'Running mitaka leap'
       # In mitaka we need to mark the network used for container ssh and management.
-      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_container_address: true' /etc/openstack_deploy/openstack_user_config.yml
-      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_ssh_address: true' /etc/openstack_deploy/openstack_user_config.yml
+      if ! grep -q "is_container_address" /etc/openstack_deploy/openstack_user_config.yml; then
+        sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_container_address: true' /etc/openstack_deploy/openstack_user_config.yml
+      fi
+      if ! grep -q "is_ssh_address" /etc/openstack_deploy/openstack_user_config.yml; then
+        sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_ssh_address: true' /etc/openstack_deploy/openstack_user_config.yml
+      fi
 
       link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-mitaka/playbooks"
