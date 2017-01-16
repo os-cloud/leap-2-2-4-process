@@ -19,7 +19,7 @@
   user: root
   tasks:
     - name: Destroy a container
-      command: lxc-destory --force --name "{{ container_name }}"
+      command: lxc-destroy --force --name "{{ container_name }}"
       delegate_to: "{{ physical_host }}"
 
     - name: Destroy container data
