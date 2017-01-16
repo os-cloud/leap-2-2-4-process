@@ -136,6 +136,11 @@ function run_items {
       # Before running anything execute inventory to ensure functionality
       python playbooks/inventory/dynamic_inventory.py > /dev/null
 
+      if [[ -f "global-requirement-pins.txt" ]]; then
+        # Install the releases global requirements
+        pip install --upgrade --isolated --force-reinstall --requirement global-requirement-pins.txt
+      fi
+
       # Source the scripts lib
       source "scripts/scripts-library.sh"
 
