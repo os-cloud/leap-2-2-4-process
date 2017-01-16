@@ -19,10 +19,7 @@
   user: root
   tasks:
     - name: Destroy a container
-      lxc_container:
-        name: "{{ container_name }}"
-        state: "absent"
-      delegate_to: "{{ physical_host }}"
+      command: lxc-destory --force --name "{{ container_name }}"
     - name: Destroy container data
       file:
         path: "{{ item }}"
