@@ -34,7 +34,7 @@
             - ironic
 
       - name: Update OpenStack variable names
-        command: "{{ playbook_dir }}/../migrate_openstack_vars.py {{ item }} {{ (item | basename)[:-4] }}"
+        command: "{{ playbook_dir }}/../scripts/migrate_openstack_vars.py {{ item }} {{ (item | basename)[:-4] }}"
         args:
             creates: "/etc/openstack_deploy.LIBERTY/VARS_MIGRATED_{{ (item | basename)[:-4] }}"
         with_fileglob:
