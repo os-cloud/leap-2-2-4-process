@@ -18,7 +18,7 @@
   gather_facts: true
   tasks:
     - name: Stop all openstack services
-      command: |
+      shell: |
         for i in $(ls /etc/init | grep "{{ item }}"); do
           service ${i%".conf"*} stop;
         done

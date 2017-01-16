@@ -170,7 +170,7 @@ function link_release {
     if [[ -d "/opt/openstack-ansible" ]]; then
       mv "/opt/openstack-ansible" "/opt/openstack-ansible.bak"
     fi
-    ln -sf "/opt/leap42/openstack-ansible-$1" "/opt/openstack-ansible"
+    ln -sf "$1" "/opt/openstack-ansible"
 }
 
 function build_venv {
