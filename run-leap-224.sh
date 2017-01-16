@@ -237,6 +237,9 @@ function main {
       build_venv ${NEWTON_RELEASE}
     fi
 
+    # The first step, no matter the run level is to ensure all systems are down.
+    RUN_TASKS+=("$(pwd)/upgrade-utilities/power-down.yml")
+
     ### Kilo System Upgrade
     # Run tasks
     UPGRADE_SCRIPTS="$(pwd)/upgrade-utilities-kilo/scripts"
@@ -340,16 +343,17 @@ function main {
     fi
     ### Newton Deploy
 
-echo -e "\n====================================================="
-echo "Newton upgrade success and break point has been hit."
-echo "System Exit to begin working on the next section"
-echo -e "=====================================================\n"
-exit 99
-
     ### Run the redeploy tasks
+    RUN_TASKS+=("$(pwd)/upgrade-utilities/destroy-old-containers.yml")
     RUN_TASKS+=("setup-everything.yml")
     run_items "/opt/openstack-ansible"
     ### Run the redeploy tasks
+
+echo -e "\n====================================================="
+echo "Newton leap success."
+echo -e "=====================================================\n"
+exit 0
+
 }
 
 main
