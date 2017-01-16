@@ -53,93 +53,11 @@
     rfc_1034_1035_name: "{{ inventory_hostname | replace('_', '-') }}"
     domain_name: "{{ openstack_domain|default('openstack.local') }}"
 
-- name: Set hostnames alias for RabbitMQ lookup compatibility
-  hosts: rabbitmq_all
+- name: Cleanup heat services through the database
+  hosts: galera_all[0]
+  user: root
   tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when: item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
-
-- name: Set hostnames alias for MariaDB lookup compatibility
-  hosts: galera_all
-  tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when: item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
-
-- name: Set hostnames alias for Neutron Agent lookup compatibility
-  hosts: neutron_all:!nova_compute
-  tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when: item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
-
-- name: Set hostnames alias for Cinder lookup compatibility
-  hosts: cinder_all
-  tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when: item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
-
-- name: Set hostnames alias for Heat lookup compatibility
-  hosts: heat_all
-  tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when: item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
-
-- name: Set hostnames alias for Nova Sevice lookup compatibility
-  hosts: nova_all:!nova_compute
-  tasks:
-    - name: Update hosts file from ansible inventory
-      lineinfile:
-        dest: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_ssh_host'] }}"
-        line: "{{ hostvars[item]['ansible_ssh_host'] }} {{ rfc_1034_1035_name }}.{{ domain_name }} {{ rfc_1034_1035_name }} {{ item }}"
-        state: present
-      when:
-        - item != inventory_hostname
-      with_items: "{{ play_hosts }}"
-  vars:
-    rfc_1034_1035_name: "{{ item | replace('_', '-') }}"
-    domain_name: "{{ openstack_domain|default('openstack.local') }}"
+    - name: Run database clean up for rfc1034/5
+      command: >
+        mysql --verbose --unbuffered -e "delete from service where host like '%\_%';" heat
+      when: destroy | bool

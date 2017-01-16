@@ -262,6 +262,7 @@ function main {
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
       popd
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
+      RUN_TASKS+=("upgrade-utilities/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
@@ -314,8 +315,7 @@ function main {
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/pip-conf-removal.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/old-hostname-compatibility-mitaka.yml")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-2.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
-      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
-      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
+      RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/db-migrations-mitaka.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
       RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/neutron-mtu-migration.yml")
       run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
       touch "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap"
