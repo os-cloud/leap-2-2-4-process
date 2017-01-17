@@ -33,13 +33,6 @@ function remove_inv_groups {
 
 # Remove containers that we no longer need
 pushd ${PLAYBOOK_PATH}/playbooks
-  # Before interacting with any containers make sure that the libs are updated
-  openstack-ansible lxc-hosts-setup.yml --skip-tags rsyslog-client
-
-  # Clean up post destroy
-  openstack-ansible lxc-containers-destroy.yml -e container_group="rsyslog_all"
-  openstack-ansible lxc-containers-destroy.yml -e container_group="nova_api_ec2"
-  openstack-ansible lxc-containers-destroy.yml -e container_group="nova_spice_console"
 
   # Remove the dead container types from inventory
   REMOVED_CONTAINERS=""
@@ -57,34 +50,4 @@ pushd ${PLAYBOOK_PATH}/playbooks
     remove_inv_items $i
   done
 
-  # Ensure the destruction of the containers we don't need.
-  ansible hosts \
-          -m shell \
-          -a 'for i in $(lxc-ls | grep -e "rsyslog" -e "nova_api_ec2" -e "nova_spice_console"); do lxc-destroy -fn $i; done'
-
-  # Ensure that apt-transport-https is installed everywhere before doing anything else,
-  #  forces True as containers may not exist at this point.
-  ansible "hosts:all_containers" \
-          -m "apt" \
-          -a "update_cache=yes name=apt-transport-https" || true
-
-  # Hunt for and remove any rpc_release link files from pip, forces True as
-  #  containers may not exist at this point.
-  ansible "hosts:all_containers" \
-          -m "file" \
-          -a "path=/root/.pip/links.d/rpc_release.link state=absent" || true
-
-  # Remove MariaDB repositories left over from Juno, forces True as
-  #  containers may not exist at this point.
-  ansible "hosts:all_containers" \
-          -m "shell" \
-          -a "sed -i '/http:.*maria.*/d' /etc/apt/sources.list.d/*" || true
-
-  ansible haproxy_hosts \
-          -m "file" \
-          -a "path=/etc/haproxy/conf.d/nova_api_ec2 state=absent" || true
-
-  ansible haproxy_hosts \
-          -m "file" \
-          -a "path=/etc/haproxy/conf.d/nova_spice_console state=absent" || true
 popd

@@ -52,10 +52,13 @@
         - "/var/lib/lxc/LXC_NAME"
       delegate_to: "{{ physical_host }}"
 
-- name: Update APT cache
+- name: Update cache and ensure dnsmasq is ready
   hosts: "hosts"
   gather_facts: false
   user: root
   tasks:
     - name: Update apt-cache
       command: apt-get update
+    - name: Restart LXC dnsmasq
+      command: "lxc-system-manage dnsmasq-restart"
+      failed_when: false
