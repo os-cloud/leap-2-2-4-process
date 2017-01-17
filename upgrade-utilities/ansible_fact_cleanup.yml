@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-# Copyright 2016, Rackspace US, Inc.
+---
+# Copyright 2015, Rackspace US, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# find all of the ansible_facts that may be saved and remove them
-#  prior to running the upgrade.
-find /etc/openstack_deploy/ansible_facts/ -type f -exec rm {} \;
+- name: Ansible fact cleanup
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  user: root
+  tasks:
+    - name: Remove any of the stored facts ansible may already have
+      command: "find /etc/openstack_deploy/ansible_facts/ -type f -exec rm {} \;"

@@ -56,6 +56,11 @@ if ! grep '^ssl_cipher_suite' /etc/openstack_deploy/user_variables.yml;then
   echo 'ssl_cipher_suite: "ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS"' | tee -a /etc/openstack_deploy/user_variables.yml
 fi
 
+# We are overriding the default value for neutron_l2_population.
+if ! grep '^neutron_l2_population' /etc/openstack_deploy/user_variables.yml;then
+  echo 'neutron_l2_population: True' | tee -a /etc/openstack_deploy/user_variables.yml
+fi
+
 # Ensure that the user_group_vars.yml file is not present.
 if [ -f "/etc/openstack_deploy/user_group_vars.yml" ];then
     rm /etc/openstack_deploy/user_group_vars.yml

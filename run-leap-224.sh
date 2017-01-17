@@ -366,7 +366,8 @@ function main {
     ### Run the Newton redeploy tasks
     RUN_TASKS+=("$(pwd)/upgrade-utilities/destroy-old-containers.yml")
     RUN_TASKS+=("setup-hosts.yml")
-    RUN_TASKS+=("setup-infrastructure.yml -e 'galera_upgrade=true'")
+    RUN_TASKS+=("setup-infrastructure.yml")
+    RUN_TASKS+=("$(pwd)/upgrade-utilities/ansible_fact_cleanup.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
     RUN_TASKS+=("setup-openstack.yml")
     run_items "/opt/openstack-ansible"
     ### Run the Newton redeploy tasks
