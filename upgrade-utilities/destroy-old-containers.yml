@@ -52,6 +52,17 @@
         - "/var/lib/lxc/LXC_NAME"
       delegate_to: "{{ physical_host }}"
 
+- name: Simple destroy the Galera Containers
+  hosts: galera_all
+  gather_facts: false
+  tasks:
+    - name: Destroy a container
+      command: lxc-destroy --force --name "{{ container_name }}"
+      delegate_to: "{{ physical_host }}"
+      register: destroy
+      failed_when: destroy.rc not in [0, 1]
+      changed_when: destroy.rc == 0
+
 - name: Update cache and ensure dnsmasq is ready
   hosts: "hosts"
   gather_facts: false

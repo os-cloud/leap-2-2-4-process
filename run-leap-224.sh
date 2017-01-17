@@ -119,7 +119,7 @@ function pre_flight {
 
     pushd /opt/leap42
       # Using this lookup plugin because it allows us to complile exact service releaes and build a complete venv from it
-      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py
+      wget https://raw.githubusercontent.com/openstack/openstack-ansible-plugins/e069d558b3d6ae8fc505d406b13a3fb66201a9c7/lookup/py_pkgs.py -O py_pkgs.py
       chmod +x py_pkgs.py
     popd
 
@@ -128,6 +128,16 @@ function pre_flight {
 
     # Install liberasurecode-dev which will be used in the venv creation process
     apt-get update && apt-get -y install liberasurecode-dev
+
+    # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
+    #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
+    #  desired before moving forward.
+    if ! grep -qwrn "^lxc_container_backing_store" /etc/{rpc,openstack}_deploy; then
+      echo "ERROR: 'lxc_container_backing_store' is unset leading to an ambiguous container backend store."
+      echo "Before continuing please set the 'lxc_container_backing_store' in your user_variables.yml file."
+      echo "Valid options are 'dir', 'lvm', and 'overlayfs'".
+      exit 99
+    fi
 }
 
 function run_items {
@@ -174,7 +184,9 @@ function link_release {
 }
 
 function build_venv {
-    # If the venv exists delete it
+    ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
+    ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
+    # If the venv archive exists delete it
     if [[ ! -f "/opt/leap42/venvs/openstack-ansible-$1.tgz" ]]; then
       # Create venv
       virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
@@ -344,11 +356,13 @@ function main {
     fi
     ### Newton Deploy
 
-    ### Run the redeploy tasks
+    ### Run the Newton redeploy tasks
     RUN_TASKS+=("$(pwd)/upgrade-utilities/destroy-old-containers.yml")
-    RUN_TASKS+=("setup-everything.yml")
+    RUN_TASKS+=("setup-hosts.yml")
+    RUN_TASKS+=("setup-infrastructure.yml -e 'galera_upgrade=true'")
+    RUN_TASKS+=("setup-openstack.yml")
     run_items "/opt/openstack-ansible"
-    ### Run the redeploy tasks
+    ### Run the Newton redeploy tasks
 
 echo -e "\n====================================================="
 echo "Newton leap success."
