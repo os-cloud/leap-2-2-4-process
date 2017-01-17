@@ -46,4 +46,5 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
 fi
 
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
 run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
