@@ -167,6 +167,8 @@ function run_items {
 }
 
 function clone_release {
+    ### The clone release function clones everything from gerrit into the leap42 directory as needed.
+    ###  Once cloned the method will perform a checkout of the branch, tag, or commit.
     if [[ -d "/opt/leap42/openstack-ansible-$1" ]]; then
       rm -rf "/opt/leap42/openstack-ansible-$1"
     fi
@@ -177,6 +179,10 @@ function clone_release {
 }
 
 function link_release {
+    ### Because there are multiple releases that we'll need to run through to get the system up-to-date
+    ###  and because the "/opt/openstack-ansible" dir must exist, this function will move any existing
+    ###  "/opt/openstack-ansible" dir to a backup dir and then link our multiple releases into the
+    ###  standard repository dir as needed.
     if [[ -d "/opt/openstack-ansible" ]]; then
       mv "/opt/openstack-ansible" "/opt/openstack-ansible.bak"
     fi
@@ -250,6 +256,7 @@ function main {
     fi
 
     # The first step, no matter the run level is to ensure all systems are down.
+    RUN_TASKS+=("$(pwd)/upgrade-utilities/cinder-volume-container-lvm-check.yml")
     RUN_TASKS+=("$(pwd)/upgrade-utilities/power-down.yml")
 
     ### Kilo System Upgrade
