@@ -213,7 +213,6 @@ EOC)
     else
       echo "the venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
-    VENV_PREP="${UPGRADE_UTILS}/venv-prep.yml"
     pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment
       # If the ansible-playbook command is not found this will bootstrap the system
       if ! which ansible-playbook; then
@@ -221,6 +220,15 @@ EOC)
           bash scripts/bootstrap-ansible.sh  # install ansible because it's not currently ready
         popd
       fi
-      openstack-ansible ${VENV_PREP} -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+      openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
+}
+
+function get_venv {
+  # Attempt to prefetch a venv archive before building it.
+  if [ "${VENV_URL}" != false ] && ! wget ${VENV_URL}/openstack-ansible-$1.tgz /opt/leap42/venvs/openstack-ansible-$1.tgz; then
+    build_venv "$1"
+  else
+    openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+  fi
 }

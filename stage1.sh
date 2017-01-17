@@ -30,19 +30,19 @@ pre_flight
 #  separately in addition to creating all of the venvs needed for a successful migration.
 if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-prep.leap" ]]; then
   clone_release ${KILO_RELEASE}
-  build_venv ${KILO_RELEASE}
+  get_venv ${KILO_RELEASE}
 fi
 if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}-prep.leap" ]]; then
   clone_release ${LIBERTY_RELEASE}
-  build_venv ${LIBERTY_RELEASE}
+  get_venv ${LIBERTY_RELEASE}
 fi
 if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}-prep.leap" ]]; then
   clone_release ${MITAKA_RELEASE}
-  build_venv ${MITAKA_RELEASE}
+  get_venv ${MITAKA_RELEASE}
 fi
 if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   clone_release ${NEWTON_RELEASE}
-  build_venv ${NEWTON_RELEASE}
+  get_venv ${NEWTON_RELEASE}
 fi
 
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
