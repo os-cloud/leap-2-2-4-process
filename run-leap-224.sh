@@ -248,7 +248,6 @@ function main {
       echo 'Running kilo leap'
       link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
       pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
-        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/juno-container-cleanup.sh
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
         ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
@@ -264,6 +263,7 @@ function main {
         fi
         ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
+        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/juno-container-cleanup.sh
       popd
       UPGRADE_PLAYBOOKS="$(pwd)/upgrade-utilities-kilo/playbooks"
       RUN_TASKS+=("upgrade-utilities/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
