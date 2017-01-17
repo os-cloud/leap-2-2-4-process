@@ -16,7 +16,7 @@
 ## Shell Opts ----------------------------------------------------------------
 set -e -u -v
 
-export PLAYBOOK_PATH="${PLAYBOOK_PATH:-$(dirname $(dirname $(dirname $(dirname $(readlink -f $0)))))}"
+export MAIN_PATH="${MAIN_PATH:-$(dirname $(dirname $(dirname $(dirname $(readlink -f $0)))))}"
 export SCRIPTS_PATH="${SCRIPTS_PATH:-$(dirname $(dirname $(dirname $(readlink -f $0))))}"
 
 function remove_inv_items {
@@ -32,7 +32,7 @@ function remove_inv_groups {
 }
 
 # Remove containers that we no longer need
-pushd ${PLAYBOOK_PATH}/playbooks
+pushd ${MAIN_PATH}/playbooks
 
   # Remove the dead container types from inventory
   REMOVED_CONTAINERS=""

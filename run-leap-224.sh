@@ -246,9 +246,9 @@ function main {
     # If the kilo leap has been accomplished, skip.
     if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
       echo 'Running kilo leap'
-      bash "${UPGRADE_SCRIPTS}/juno-container-cleanup.sh"
       link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
       pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+        SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/juno-container-cleanup.sh
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
         ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
         SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
