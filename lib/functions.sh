@@ -127,6 +127,10 @@ function pre_flight {
     pip install --upgrade --isolated "virtualenv==15.1.0"
 
     # Install liberasurecode-dev which will be used in the venv creation process
+    if ! grep -n ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -qw "backports"; then
+      failure "The trusty backports repo has not been enabled on this host."
+      exit 99
+    fi
     apt-get update && apt-get -y install liberasurecode-dev
 
     # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
