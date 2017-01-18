@@ -16,6 +16,7 @@
 - name: Sync combined venv and prep
   hosts: "keystone_all[0]:glance_all[0]:cinder_all[0]:nova_api_os_compute[0]:neutron_server[0]:heat_all[0]:ironic_conductor[0]:aodh_all[0]"
   user: root
+  gather_facts: false
   vars:
     file_name: "{{ venv_tar_location | basename }}"
   tasks:

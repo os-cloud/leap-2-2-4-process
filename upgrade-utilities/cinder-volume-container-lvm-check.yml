@@ -29,8 +29,8 @@
       set_fact:
         uses_lvm: true
       when: >
-        'lvm' in cinder_backends[item]['volume_driver'] | lower
-      with_items: "{{ cinder_backends }}"
+        'lvm' in item.value['volume_driver'] | lower
+      with_dict: "{{ cinder_backends }}"
 
     - name: Check for cinder volume in a container failure
       fail:
@@ -39,5 +39,5 @@
           [ {{ container_name }} ] to the physical host [ {{ physical_host }} ]. The leap
           upgrade can NOT continue until this task has been accomplished.
       when: >
-        uses_lvm == true and
-        in_container == true
+        uses_lvm | default(false) == true and
+        in_container | default(false) == true

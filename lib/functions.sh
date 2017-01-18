@@ -20,11 +20,11 @@ function notice {
 }
 
 function warning {
-  echo -e "[!]\t\033[1;33m${1}\033[0m"
+  echo -e "[-]\t\033[1;33m${1}\033[0m"
 }
 
 function failure {
-  echo -e '[!!]'"\t\033[1;31m${1}\033[0m"
+  echo -e '[!]'"\t\033[1;31m${1}\033[0m"
 }
 
 function tag_leap_success {
@@ -62,13 +62,14 @@ function run_lock {
     # named ||
     eval "openstack-ansible $2"
     playbook_status="$?"
-    notice "ran $run_item"
+    notice "Ran: $run_item"
 
     if [ "$playbook_status" == "0" ];then
       RUN_TASKS=("${RUN_TASKS[@]/$run_item}")
       touch "$upgrade_marker"
       notice "$run_item has been marked as success"
     else
+      FAILURES_LIST=$(seq $1 $((${#RUN_TASKS[@]} - 1)))
       failure "******************** failure ********************"
       failure "The upgrade script has encountered a failure."
       failure "Failed on task \"$run_item\""
@@ -79,7 +80,7 @@ function run_lock {
       # Using seq to genertate a sequence which starts from the spot
       # where previous exception or failures happened.
       # run the tasks in order
-      for item in $(seq $1 $((${#RUN_TASKS[@]} - 1))); do
+      for item in ${FAILURES_LIST}; do
         if [ -n "${RUN_TASKS[$item]}" ]; then
           warning "openstack-ansible ${RUN_TASKS[$item]}"
         fi
@@ -99,13 +100,10 @@ function pre_flight {
     clear
 
     # Notify the user.
-    warning "This script will perform a LEAP upgrade from Juno to Newton.
-    \tOnce you start the upgrade there's no going back.
-
-    \t**Note, this is an OFFLINE upgrade**
-
-    \tAre you ready to perform this upgrade now?
-    "
+    warning "This script will perform a LEAP upgrade from Juno to Newton."
+    warning "Once you start the upgrade there's no going back."
+    warning "**Note, this is an OFFLINE upgrade**"
+    warning "Are you ready to perform this upgrade now?"
 
     # Confirm the user is ready to upgrade.
     read -p 'Enter "YES" to continue or anything else to quit: ' UPGRADE
@@ -157,6 +155,11 @@ function run_items {
 
       # Source the scripts lib
       source "scripts/scripts-library.sh"
+
+      # If there's a pip.conf file, move it out of the way
+      if [[ -f "${HOME}/.pip/pip.conf" ]] && [[ ! -f "${HOME}/.pip/pip.conf.orignal" ]]; then
+        mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
+      fi
 
       # Install ansible for system migrations
       bash scripts/bootstrap-ansible.sh
