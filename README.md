@@ -38,9 +38,9 @@ If you want to preload the stages you can do so by running the various stages
 independently.
 
 ``` bash
-bash ./stage1.sh
-bash ./stage2.sh
-bash ./stage3.sh
+bash ./prep.sh
+bash ./upgrade.sh
+bash ./migrations.sh
 ```
 
 Once all of the stages are complete the cloud will be running OpenStack

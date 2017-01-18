@@ -25,9 +25,9 @@ source lib/functions.sh
 source lib/vars.sh
 
 ## Stages --------------------------------------------------------------------
-source stage1.sh
-source stage2.sh
-source stage3.sh
+source prep.sh
+source upgrade.sh
+source migrations.sh
 
 echo -e "\n====================================================="
 notice "All Leaps successful."
