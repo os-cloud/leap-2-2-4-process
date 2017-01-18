@@ -13,12 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- hosts: hosts
-  connection: local
-  tasks:
-    - set_fact:
-        destroy: "true"
-
 - name: Apply cinder changes with cinder-manage
   hosts: cinder_all[0]
   user: root
@@ -91,7 +85,6 @@
       with_subelements:
         - to_disable.results
         - stdout_lines
-      when: destroy | bool
 
 - name: Apply cinder changes with cinder-manage
   hosts: cinder_all[0]
@@ -107,7 +100,6 @@
             done
       args:
         executable: /bin/bash
-      when: destroy | bool
 
 - name: Cleanup layer2 ports
   gather_facts: no
@@ -127,4 +119,3 @@
             sleep 1
             neutron port-delete $portid
             done
-      when: destroy | bool

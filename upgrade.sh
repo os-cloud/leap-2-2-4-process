@@ -50,7 +50,6 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
     SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/juno-container-cleanup.sh
   popd
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-kilo/playbooks"
-  RUN_TASKS+=("upgrade-utilities/rfc1034_1035-cleanup.yml -e 'destroy_ok=yes'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
