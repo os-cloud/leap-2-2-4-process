@@ -14,13 +14,13 @@
 # limitations under the License.
 
 - name: Stop all OpenStack services
-  hosts: hosts
+  hosts: all
   gather_facts: true
   tasks:
     - name: Stop all openstack services
       shell: |
-        for i in $(ls /etc/init | grep "{{ item }}"); do
-          service ${i%".conf"*} stop;
+        for i in $(ls /etc/init /etc/init.d | grep "{{ item }}"); do
+          service ${i%".conf"*} stop || true;
         done
       with_items:
         - trove
@@ -40,3 +40,4 @@
         - cinder
         - glance
         - keystone
+        - apache

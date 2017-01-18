@@ -19,6 +19,14 @@ function notice {
   echo -e "[+]\t\033[1;32m${1}\033[0m"
 }
 
+function warning {
+  echo -e "[!]\t\033[1;33m${1}\033[0m"
+}
+
+function failure {
+  echo -e '[!!]'"\t\033[1;31m${1}\033[0m"
+}
+
 function tag_leap_success {
   notice "LEAP ${1} success"
   touch "/opt/leap42/openstack-ansible-${1}.leap"
@@ -54,18 +62,18 @@ function run_lock {
     # named ||
     eval "openstack-ansible $2"
     playbook_status="$?"
-    echo "ran $run_item"
+    notice "ran $run_item"
 
     if [ "$playbook_status" == "0" ];then
       RUN_TASKS=("${RUN_TASKS[@]/$run_item}")
       touch "$upgrade_marker"
-      echo "$run_item has been marked as success"
+      notice "$run_item has been marked as success"
     else
-      echo "******************** failure ********************"
-      echo "The upgrade script has encountered a failure."
-      echo "Failed on task \"$run_item\""
-      echo "Re-run the run-upgrade.sh script, or"
-      echo "execute the remaining tasks manually:"
+      failure "******************** failure ********************"
+      failure "The upgrade script has encountered a failure."
+      failure "Failed on task \"$run_item\""
+      failure "Re-run the run-upgrade.sh script, or"
+      failure "execute the remaining tasks manually:"
       # NOTE:
       # List the remaining, incompleted tasks from the tasks array.
       # Using seq to genertate a sequence which starts from the spot
@@ -73,10 +81,10 @@ function run_lock {
       # run the tasks in order
       for item in $(seq $1 $((${#RUN_TASKS[@]} - 1))); do
         if [ -n "${RUN_TASKS[$item]}" ]; then
-          echo "openstack-ansible ${RUN_TASKS[$item]}"
+          warning "openstack-ansible ${RUN_TASKS[$item]}"
         fi
       done
-      echo "******************** failure ********************"
+      failure "******************** failure ********************"
       exit 99
     fi
   else
@@ -91,19 +99,18 @@ function pre_flight {
     clear
 
     # Notify the user.
-    echo -e "
-    This script will perform a LEAP upgrade from Juno to Newton.
-    Once you start the upgrade there's no going back.
+    warning "This script will perform a LEAP upgrade from Juno to Newton.
+    \tOnce you start the upgrade there's no going back.
 
-    **Note, this is an OFFLINE upgrade**
+    \t**Note, this is an OFFLINE upgrade**
 
-    Are you ready to perform this upgrade now?
+    \tAre you ready to perform this upgrade now?
     "
 
     # Confirm the user is ready to upgrade.
     read -p 'Enter "YES" to continue or anything else to quit: ' UPGRADE
     if [ "${UPGRADE}" == "YES" ]; then
-      echo "Running LEAP Upgrade"
+      notice "Running LEAP Upgrade"
     else
       exit 99
     fi
@@ -117,7 +124,7 @@ function pre_flight {
     popd
 
     # Install virtual env for building migration venvs
-    pip install "virtualenv==15.1.0" --isolated --upgrade
+    pip install --upgrade --isolated "virtualenv==15.1.0"
 
     # Install liberasurecode-dev which will be used in the venv creation process
     apt-get update && apt-get -y install liberasurecode-dev
@@ -126,9 +133,9 @@ function pre_flight {
     #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
     #  desired before moving forward.
     if ! grep -qwrn "^lxc_container_backing_store" /etc/{rpc,openstack}_deploy; then
-      echo "ERROR: 'lxc_container_backing_store' is unset leading to an ambiguous container backend store."
-      echo "Before continuing please set the 'lxc_container_backing_store' in your user_variables.yml file."
-      echo "Valid options are 'dir', 'lvm', and 'overlayfs'".
+      failure "ERROR: 'lxc_container_backing_store' is unset leading to an ambiguous container backend store."
+      failure "Before continuing please set the 'lxc_container_backing_store' in your user_variables.yml file."
+      failure "Valid options are 'dir', 'lvm', and 'overlayfs'".
       exit 99
     fi
 }
@@ -190,10 +197,10 @@ function build_venv {
       # Create venv
       virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
       PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
-      pip install pip --upgrade --force-reinstall
+      pip install --upgrade --isolated --force-reinstall pip
 
       # Modern Ansible is needed to run the package lookup
-      pip install "ansible==2.1.1.0"
+      pip install --isolated "ansible==2.1.1.0"
 
       # Get package dump from the OSA release
       PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
@@ -211,9 +218,9 @@ EOC)
         tar -czf "openstack-ansible-$1.tgz" "openstack-ansible-$1"
       popd
     else
-      echo "the venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
+      notice "The venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
-    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment
+    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment || pushd /opt/os-ansible-deployment/rpc_deployment
       # If the ansible-playbook command is not found this will bootstrap the system
       if ! which ansible-playbook; then
         pushd "/opt/leap42/openstack-ansible-$1"
@@ -226,9 +233,11 @@ EOC)
 
 function get_venv {
   # Attempt to prefetch a venv archive before building it.
-  if [ "${VENV_URL}" != false ] && ! wget ${VENV_URL}/openstack-ansible-$1.tgz /opt/leap42/venvs/openstack-ansible-$1.tgz; then
+  if ! wget "${VENV_URL}/openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1.tgz" > /dev/null; then
     build_venv "$1"
   else
-    openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment || pushd /opt/os-ansible-deployment/rpc_deployment
+      openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+    popd
   fi
 }
