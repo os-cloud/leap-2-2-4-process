@@ -32,7 +32,9 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
   notice 'Running kilo leap'
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
-    SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
+    if [[ -d "rpc_deploy" ]]; then
+      SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
+    fi
     ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
     SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/new-variable-prep.sh
     # Convert LDAP variables if any are found

@@ -20,4 +20,5 @@
   user: root
   tasks:
     - name: Remove any of the stored facts ansible may already have
-      command: "find /etc/openstack_deploy/ansible_facts/ -type f -exec rm {} \;"
+      command: >
+        find /etc/openstack_deploy/ansible_facts/ -type f -exec rm {} \;
