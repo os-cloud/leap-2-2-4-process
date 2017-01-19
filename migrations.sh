@@ -29,12 +29,14 @@ source lib/vars.sh
 if [ -e "/opt/openstack-ansible" ]; then
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
 fi
+RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml || true")
 run_items "/opt/openstack-ansible"
 
 # Kilo migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-db.leap" ]]; then
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-kilo.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${KILO_RELEASE}.tgz'")
   run_items "/opt/openstack-ansible"
   tag_leap_success "${KILO_RELEASE}-db"
@@ -43,6 +45,7 @@ fi
 # Liberty migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}-db.leap" ]]; then
   link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-liberty.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${LIBERTY_RELEASE}.tgz'")
   RUN_TASKS+=("${UPGRADE_UTILS}/glance-db-storage-url-fix.yml")
   run_items "/opt/openstack-ansible"
@@ -52,6 +55,7 @@ fi
 # Mitaka migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}-db.leap" ]]; then
   link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-mitaka.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
   RUN_TASKS+=("${UPGRADE_UTILS}/neutron-mtu-migration.yml")
   run_items "/opt/openstack-ansible"
@@ -61,6 +65,7 @@ fi
 # Newton migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-db.leap" ]]; then
   link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-collation-alter.yml")
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-newton.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
   run_items "/opt/openstack-ansible"
@@ -69,6 +74,8 @@ fi
 ### Run the DB migrations
 
 ### Run the Newton redeploy tasks
+RUN_TASKS=()
+RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
 RUN_TASKS+=("setup-hosts.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")

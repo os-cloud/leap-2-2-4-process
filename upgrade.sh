@@ -50,6 +50,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
     SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/juno-container-cleanup.sh
   popd
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-kilo/playbooks"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustments-kilo.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${KILO_RELEASE}'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/host-adjustments.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/remove-juno-log-rotate.yml || true")
@@ -68,6 +69,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
   notice 'Running liberty leap'
   link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-liberty/playbooks"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-liberty.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-liberty.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}'")
@@ -92,6 +94,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
 
   link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-mitaka/playbooks"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-mitaka-1.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/user-secrets-adjustment-mitaka.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${MITAKA_RELEASE}'")
@@ -109,6 +112,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]]; then
   notice 'Running newton leap'
   link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-newton/playbooks"
+  RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/lbaas-version-check.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/ansible_fact_cleanup-newton.yml")
   RUN_TASKS+=("${UPGRADE_PLAYBOOKS}/deploy-config-changes-newton.yml -e 'osa_playbook_dir=/opt/leap42/openstack-ansible-${NEWTON_RELEASE}'")
