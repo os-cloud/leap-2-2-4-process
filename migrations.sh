@@ -75,9 +75,7 @@ fi
 
 ### Run the Newton redeploy tasks
 RUN_TASKS=()
-RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
-RUN_TASKS+=("setup-hosts.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
 RUN_TASKS+=("setup-infrastructure.yml")
 RUN_TASKS+=("setup-openstack.yml")

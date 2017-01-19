@@ -121,3 +121,13 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}.leap" ]]; then
   run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
   tag_leap_success "${NEWTON_RELEASE}-prep"
 fi
+
+### Run host upgrade
+notice 'Running host upgrade'
+link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+RUN_TASKS=()
+RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
+RUN_TASKS+=("openstack-hosts-setup.yml")
+RUN_TASKS+=("lxc-hosts-setup.yml")
+run_items "/opt/openstack-ansible"
+### Run host upgrade
