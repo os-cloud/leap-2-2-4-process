@@ -205,6 +205,32 @@ function link_release {
     ln -sf "$1" "/opt/openstack-ansible"
 }
 
+function run_venv_prep {
+    # If the ansible-playbook command is not found this will bootstrap the system
+    if ! which ansible-playbook; then
+      pushd "/opt/leap42/openstack-ansible-$1"
+        bash scripts/bootstrap-ansible.sh  # install ansible because it's not currently ready
+      popd
+    fi
+    echo "CURRENT DIR $(pwd)"
+
+    if [[ -e "/opt/ansible-lxc-rpc/rpc_deployment" ]]; then
+        PB_DIR="/opt/ansible-lxc-rpc/rpc_deployment"
+    elif [[ -e "/opt/os-ansible-deployment/rpc_deployment" ]]; then
+        PB_DIR="/opt/os-ansible-deployment/rpc_deployment"
+    elif [[ -e "/opt/openstack-ansible/playbooks" ]]; then
+        PB_DIR="/opt/openstack-ansible/playbooks"
+    elif [[ -d "/opt/leap42/openstack-ansible-$1/playbooks" ]]; then
+        PB_DIR="/opt/leap42/openstack-ansible-$1/playbooks"
+    fi
+
+    echo "PLAYBOOK DIR ${PB_DIR}"
+    pushd "${PB_DIR}"
+      echo "openstack-ansible" "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+      openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+    popd
+}
+
 function build_venv {
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
@@ -236,15 +262,7 @@ EOC)
     else
       notice "The venv \"/opt/leap42/venvs/openstack-ansible-$1.tgz\" already exists. If you need to recreate this venv, delete it."
     fi
-    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment || pushd /opt/os-ansible-deployment/rpc_deployment
-      # If the ansible-playbook command is not found this will bootstrap the system
-      if ! which ansible-playbook; then
-        pushd "/opt/leap42/openstack-ansible-$1"
-          bash scripts/bootstrap-ansible.sh  # install ansible because it's not currently ready
-        popd
-      fi
-      openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
-    popd
+    run_venv_prep "$1"
 }
 
 function get_venv {
@@ -252,8 +270,6 @@ function get_venv {
   if ! wget "${VENV_URL}/openstack-ansible-$1.tgz" "/opt/leap42/venvs/openstack-ansible-$1.tgz" > /dev/null; then
     build_venv "$1"
   else
-    pushd /opt/openstack-ansible || pushd /opt/ansible-lxc-rpc/rpc_deployment || pushd /opt/os-ansible-deployment/rpc_deployment
-      openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
-    popd
+    run_venv_prep "$1"
   fi
 }
