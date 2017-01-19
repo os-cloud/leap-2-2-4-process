@@ -75,25 +75,3 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-db.leap" ]]; then
   tag_leap_success "${NEWTON_RELEASE}-db"
 fi
 ### Run the DB migrations
-
-### Run the redeploy tasks
-# Forget about the old Juno neutron agent container in inventory.
-#  This is done to maximize uptime by leaving the old systems in
-#  place while the redeployment work is going on.
-SCRIPTS_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}/scripts" \
-  MAIN_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}" \
-    ${UPGRADE_UTILS}/neutron-container-forget.sh
-
-link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-RUN_TASKS=()
-RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
-RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
-RUN_TASKS+=("lxc-hosts-setup.yml")
-RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
-RUN_TASKS+=("lxc-containers-create.yml")
-RUN_TASKS+=("setup-infrastructure.yml")
-RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
-RUN_TASKS+=("setup-openstack.yml")
-RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
-run_items "/opt/openstack-ansible"
-### Run the redeploy tasks

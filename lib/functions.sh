@@ -146,8 +146,17 @@ function pre_flight {
 function run_items {
     ### Run system upgrade processes
     pushd ${1}
+      if [[ -e "playbooks" ]]; then
+        PB_DIR="playbooks"
+      elif [[ -e "rpc_deployment" ]]; then
+        PB_DIR="rpc_deployment"
+      else
+        failure "no known playbook directory found"
+        exit 99
+      fi
+
       # Before running anything execute inventory to ensure functionality
-      python playbooks/inventory/dynamic_inventory.py > /dev/null
+      python "${PB_DIR}/inventory/dynamic_inventory.py" > /dev/null
 
       # Install the releases global requirements
       if [[ -f "global-requirement-pins.txt" ]]; then
@@ -173,7 +182,7 @@ function run_items {
       # Install ansible for system migrations
       bash scripts/bootstrap-ansible.sh
 
-      pushd playbooks
+      pushd ${PB_DIR}
         # Run the tasks in order
         for item in ${!RUN_TASKS[@]}; do
           run_lock $item "${RUN_TASKS[$item]}"
@@ -212,21 +221,8 @@ function run_venv_prep {
         bash scripts/bootstrap-ansible.sh  # install ansible because it's not currently ready
       popd
     fi
-    echo "CURRENT DIR $(pwd)"
 
-    if [[ -e "/opt/ansible-lxc-rpc/rpc_deployment" ]]; then
-        PB_DIR="/opt/ansible-lxc-rpc/rpc_deployment"
-    elif [[ -e "/opt/os-ansible-deployment/rpc_deployment" ]]; then
-        PB_DIR="/opt/os-ansible-deployment/rpc_deployment"
-    elif [[ -e "/opt/openstack-ansible/playbooks" ]]; then
-        PB_DIR="/opt/openstack-ansible/playbooks"
-    elif [[ -d "/opt/leap42/openstack-ansible-$1/playbooks" ]]; then
-        PB_DIR="/opt/leap42/openstack-ansible-$1/playbooks"
-    fi
-
-    echo "PLAYBOOK DIR ${PB_DIR}"
-    pushd "${PB_DIR}"
-      echo "openstack-ansible" "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
+    pushd "/opt/leap42/openstack-ansible-${JUNO_RELEASE}/rpc_deployment"
       openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
 }

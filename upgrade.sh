@@ -24,7 +24,7 @@ set -e -u -v
 source lib/functions.sh
 source lib/vars.sh
 
-### Kilo System Upgrade
+### Kilo System migration
 # Run tasks
 UPGRADE_SCRIPTS="${UPGRADE_UTILS}-kilo/scripts"
 # If the kilo leap has been accomplished, skip.
@@ -61,9 +61,9 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
   run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   tag_leap_success "${KILO_RELEASE}-prep"
 fi
-### Kilo System Upgrade
+### Kilo System migration
 
-### Liberty System Upgrade
+### Liberty System migration
 # Run tasks
 if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
   notice 'Running liberty leap'
@@ -78,9 +78,9 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}.leap" ]]; then
   run_items "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
   tag_leap_success "${LIBERTY_RELEASE}-prep"
 fi
-### Liberty System Upgrade
+### Liberty System migration
 
-### Mitaka System Upgrade
+### Mitaka System migration
 # Run tasks
 if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
   notice 'Running mitaka leap'
@@ -104,7 +104,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
   run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   tag_leap_success "${MITAKA_RELEASE}-prep"
 fi
-### Mitaka System Upgrade
+### Mitaka System migration
 
 ### Newton Deploy
 # Run tasks
