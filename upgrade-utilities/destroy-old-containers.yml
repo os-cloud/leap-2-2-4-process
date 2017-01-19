@@ -63,7 +63,7 @@
       failed_when: destroy.rc not in [0, 1]
       changed_when: destroy.rc == 0
 
-- name: Update cache and ensure dnsmasq is ready
+- name: Host prep for redeployment
   hosts: "hosts"
   gather_facts: false
   user: root
@@ -76,3 +76,7 @@
       failed_when: false
     - name: Update apt-cache
       command: apt-get update
+    - name: Search for and destroy reminent RPC grouped containers
+      shell: >-
+        lxc-ls -f | awk '/rpc/ {print $1}' | xargs -n 1 lxc-destroy -fn
+      failed_when: false
