@@ -25,12 +25,12 @@ source lib/functions.sh
 source lib/vars.sh
 
 ## Stages --------------------------------------------------------------------
+pre_flight
+
 source prep.sh
 source upgrade.sh
 source migrations.sh
 source re-deploy.sh
-
-pre_flight
 
 echo -e "\n====================================================="
 notice "All Leaps successful."
