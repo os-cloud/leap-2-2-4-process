@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Old pip.conf removal
+- name: Old conf removal
   hosts: hosts
   gather_facts: true
   user: root
@@ -21,4 +21,9 @@
     - name: Remove pip.conf
       file:
         path: "{{ ansible_env.HOME }}/.pip/pip.conf"
+        state: "absent"
+
+    - name: Remove 00apt-cacher-proxy
+      file:
+        path: "/etc/apt/apt.conf.d/00apt-cacher-proxy"
         state: "absent"
