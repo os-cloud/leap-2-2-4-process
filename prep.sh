@@ -27,6 +27,7 @@ source lib/vars.sh
 # Clone the Juno release so we have a clean copy of the source code.
 if [[ ! -f "/opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap" ]]; then
   clone_release ${JUNO_RELEASE}
+  touch opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap
 fi
 
 # Build the releases. This will clone all of the releases and check them out

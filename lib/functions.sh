@@ -222,6 +222,12 @@ function run_venv_prep {
       popd
     fi
 
+    if [[ -e "/etc/rpc_deploy" ]]; then
+      PB_DIR="/opt/leap42/openstack-ansible-${JUNO_RELEASE}/rpc_deployment"
+    else
+      PB_DIR="/opt/leap42/openstack-ansible-${KILO_RELEASE}/playbooks"
+    fi
+
     pushd "/opt/leap42/openstack-ansible-${JUNO_RELEASE}/rpc_deployment"
       openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
