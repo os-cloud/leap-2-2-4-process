@@ -103,6 +103,7 @@ function pre_flight {
     warning "This script will perform a LEAP upgrade from Juno to Newton."
     warning "Once you start the upgrade there's no going back."
     warning "**Note, this is an OFFLINE upgrade**"
+    notice "If you want to run the upgrade in parts please exit this script to do so."
     warning "Are you ready to perform this upgrade now?"
 
     # Confirm the user is ready to upgrade.
