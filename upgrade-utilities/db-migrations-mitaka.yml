@@ -48,6 +48,8 @@
   hosts: "nova_api_os_compute[0]"
   user: root
   tasks:
+    - name: Run nova null uuid checks
+      command: "{{ venv_path }}/bin/nova-manage db null_instance_uuid_scan --delete"
     - name: Perform a Nova DB sync
       command: "{{ venv_path }}/bin/nova-manage db sync"
     - name: Perform Nova online data migrations
