@@ -26,14 +26,14 @@ source lib/vars.sh
 
 ### Run the DB migrations
 # Stop the services to ensure DB and application consistency
-if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-poweroff.leap" ]]; then
+if [[ ! -f "/opt/leap42/openstack-ansible-poweroff.leap" ]]; then
   if [ -e "/opt/openstack-ansible" ]; then
     link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   fi
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml || true")
   run_items "/opt/openstack-ansible"
-  tag_leap_success "${KILO_RELEASE}-poweroff"
+  tag_leap_success "poweroff"
 fi
 
 # Kilo migrations
