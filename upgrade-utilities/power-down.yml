@@ -15,7 +15,7 @@
 
 - name: Stop all OpenStack services
   hosts: all
-  gather_facts: true
+  gather_facts: false
   tasks:
     - name: Stop all openstack services
       shell: |
