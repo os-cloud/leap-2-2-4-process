@@ -22,6 +22,7 @@
       service:
         name: mysql
         state: stopped
+      failed_when: false
 
     - name: Remove stale .sst
       file:
