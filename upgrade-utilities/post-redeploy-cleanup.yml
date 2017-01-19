@@ -119,3 +119,13 @@
             sleep 1
             neutron port-delete $portid
             done
+
+- name: Remove the reminent neutron agent containers
+  hosts: "hosts"
+  gather_facts: false
+  user: root
+  tasks:
+    - name: Search for and destroy reminent RPC grouped containers
+      shell: >-
+        lxc-ls -f | awk '/rpc/ {print $1}' | xargs -n 1 lxc-destroy -fn
+      failed_when: false
