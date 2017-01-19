@@ -161,6 +161,12 @@ function run_items {
         mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
       fi
 
+      # If ansible is already installed, uninstall it
+      pip uninstall -y ansible || true
+      if [[ -d "/opt/ansible-runtime" ]]; then
+        rm -rf /opt/ansible-runtime
+      fi
+
       # Install ansible for system migrations
       bash scripts/bootstrap-ansible.sh
 
