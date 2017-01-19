@@ -26,12 +26,15 @@ source lib/vars.sh
 
 ### Run the DB migrations
 # Stop the services to ensure DB and application consistency
-if [ -e "/opt/openstack-ansible" ]; then
-  link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-poweroff.leap" ]]; then
+  if [ -e "/opt/openstack-ansible" ]; then
+    link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
+  fi
+  RUN_TASKS=()
+  RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml || true")
+  run_items "/opt/openstack-ansible"
+  tag_leap_success "${KILO_RELEASE}-poweroff"
 fi
-RUN_TASKS=()
-RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml || true")
-run_items "/opt/openstack-ansible"
 
 # Kilo migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-db.leap" ]]; then
@@ -73,12 +76,15 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-db.leap" ]]; then
 fi
 ### Run the DB migrations
 
-### Run the Newton redeploy tasks
+### Run the redeploy tasks
+link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
+RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
 RUN_TASKS+=("setup-infrastructure.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 RUN_TASKS+=("setup-openstack.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/rfc1034_1035-cleanup.yml")
 run_items "/opt/openstack-ansible"
-### Run the Newton redeploy tasks
+### Run the redeploy tasks
