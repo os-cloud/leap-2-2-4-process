@@ -161,8 +161,10 @@ function run_items {
         mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
       fi
 
-      # If ansible is already installed, uninstall it
-      pip uninstall -y ansible || true
+      # If ansible is already installed, uninstall it.
+      while pip uninstall -y ansible; do
+        notice "Removed System installed Ansible"
+      done
       if [[ -d "/opt/ansible-runtime" ]]; then
         rm -rf /opt/ansible-runtime
       fi

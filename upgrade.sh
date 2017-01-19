@@ -128,6 +128,5 @@ link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-conf-purge.yml")
 RUN_TASKS+=("openstack-hosts-setup.yml")
-RUN_TASKS+=("lxc-hosts-setup.yml")
 run_items "/opt/openstack-ansible"
 ### Run host upgrade

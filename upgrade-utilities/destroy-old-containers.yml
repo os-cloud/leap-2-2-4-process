@@ -68,8 +68,11 @@
   gather_facts: false
   user: root
   tasks:
+    - name: Stop LXC dnsmasq
+      command: "lxc-system-manage dnsmasq-stop"
+      failed_when: false
+    - name: Start LXC dnsmasq
+      command: "lxc-system-manage dnsmasq-start"
+      failed_when: false
     - name: Update apt-cache
       command: apt-get update
-    - name: Restart LXC dnsmasq
-      command: "lxc-system-manage dnsmasq-restart"
-      failed_when: false
