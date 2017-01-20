@@ -38,40 +38,44 @@ fi
 
 # Kilo migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}-db.leap" ]]; then
+  notice "Running Kilo DB Migrations"
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-kilo.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${KILO_RELEASE}.tgz'")
-  run_items "/opt/openstack-ansible"
+  run_items "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   tag_leap_success "${KILO_RELEASE}-db"
 fi
 
 # Liberty migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}-db.leap" ]]; then
+  notice "Running Liberty DB Migrations"
   link_release "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-liberty.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${LIBERTY_RELEASE}.tgz'")
   RUN_TASKS+=("${UPGRADE_UTILS}/glance-db-storage-url-fix.yml")
-  run_items "/opt/openstack-ansible"
+  run_items "/opt/leap42/openstack-ansible-${LIBERTY_RELEASE}"
   tag_leap_success "${LIBERTY_RELEASE}-db"
 fi
 
 # Mitaka migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}-db.leap" ]]; then
+  notice "Running Mitaka DB Migrations"
   link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-mitaka.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${MITAKA_RELEASE}.tgz'")
   RUN_TASKS+=("${UPGRADE_UTILS}/neutron-mtu-migration.yml")
-  run_items "/opt/openstack-ansible"
+  run_items "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   tag_leap_success "${MITAKA_RELEASE}-db"
 fi
 
 # Newton migrations
 if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-db.leap" ]]; then
+  notice "Running Newton DB Migrations"
   link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
   RUN_TASKS=()
   RUN_TASKS+=("${UPGRADE_UTILS}/db-collation-alter.yml")
   RUN_TASKS+=("${UPGRADE_UTILS}/db-migrations-newton.yml -e 'venv_tar_location=/opt/leap42/venvs/openstack-ansible-${NEWTON_RELEASE}.tgz'")
-  run_items "/opt/openstack-ansible"
+  run_items "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
   tag_leap_success "${NEWTON_RELEASE}-db"
 fi
 ### Run the DB migrations

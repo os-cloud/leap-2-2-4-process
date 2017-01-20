@@ -98,6 +98,9 @@ function system_bootstrap {
     if [[ -d "/opt/ansible-runtime" ]]; then
       rm -rf "/opt/ansible-runtime"
     else
+      # There are several points in time where pip may have been busted or creating dist-info
+      #  directories incorrectly. This command simply mops those bits up when the
+      #  ansible-runtime venv does not exist.
       find  /usr/local/lib/python2.7/dist-packages -name '*.dist-info' -exec rm -rf {} \;
     fi
 

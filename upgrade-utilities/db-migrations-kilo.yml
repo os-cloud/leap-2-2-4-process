@@ -62,6 +62,8 @@
     neutron_plugins:
       ml2:
         plugin_ini: "plugins/ml2/ml2_conf.ini"
+      ml2.lxb:
+        plugin_ini: "plugins/ml2/ml2_conf.ini"
       plumgrid:
         plugin_ini: "plugins/plumgrid/plumgrid.ini"
     neutron_system_user_name: "neutron"
