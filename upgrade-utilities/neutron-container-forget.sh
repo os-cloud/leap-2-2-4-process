@@ -28,19 +28,12 @@ function get_inv_items {
   ${SCRIPTS_PATH}/inventory-manage.py -f /etc/openstack_deploy/openstack_inventory.json -l | grep -w ".*$1"
 }
 
-function remove_inv_groups {
-  ${SCRIPTS_PATH}/inventory-manage.py -f /etc/openstack_deploy/openstack_inventory.json --remove-group "$1"
-}
-
 # Remove containers that we no longer need
 pushd ${MAIN_PATH}/playbooks
 
   # Remove the dead container types from inventory
   REMOVED_CONTAINERS=""
   REMOVED_CONTAINERS+="$(get_inv_items 'neutron_agent' | awk '{print $2}') "
-
-  # Remove unused groups from inventory
-  remove_inv_groups "neutron_agent"
 
   for i in ${REMOVED_CONTAINERS};do
     remove_inv_items $i
