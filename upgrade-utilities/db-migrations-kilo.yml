@@ -56,7 +56,7 @@
       command: "{{ venv_path }}/bin/nova-manage db null_instance_uuid_scan --delete"
 
 - name: Neutron DB Migrations
-  hosts: "neutron_agent[0]"
+  hosts: "neutron_server[0]"
   user: root
   vars:
     neutron_plugins:
