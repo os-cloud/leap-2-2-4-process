@@ -122,16 +122,6 @@ function pre_flight {
       chmod +x py_pkgs.py
     popd
 
-    # Install virtual env for building migration venvs
-    pip install --upgrade --isolated "virtualenv==15.1.0"
-
-    # Install liberasurecode-dev which will be used in the venv creation process
-    if ! grep -n ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -qw "backports"; then
-      failure "The trusty backports repo has not been enabled on this host."
-      exit 99
-    fi
-    apt-get update && apt-get -y install liberasurecode-dev
-
     # If the lxc backend store was not set halt and instruct the user to set it. In Juno we did more to detect the backend storage
     #  size than we do in later releases. While the auto-detection should still work it's best to have the deployer set the value
     #  desired before moving forward.
@@ -141,6 +131,22 @@ function pre_flight {
       failure "Valid options are 'dir', 'lvm', and 'overlayfs'".
       exit 99
     fi
+
+    # Install liberasurecode-dev which will be used in the venv creation process
+    if ! grep -n ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -qw "backports"; then
+      failure "The trusty backports repo has not been enabled on this host."
+      exit 99
+    fi
+    apt-get update > /dev/null
+    apt-get -y install liberasurecode-dev > /dev/null
+
+    # Upgrade pip if it's needed
+    if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "7.1.0"; then
+      pip install --upgrade --isolated "pip==7.1.0"
+    fi
+
+    # Install virtual env for building migration venvs
+    pip install --upgrade --isolated "virtualenv==15.1.0"
 }
 
 function run_items {
@@ -151,7 +157,7 @@ function run_items {
       elif [[ -e "rpc_deployment" ]]; then
         PB_DIR="rpc_deployment"
       else
-        failure "no known playbook directory found"
+        failure "No known playbook directory found"
         exit 99
       fi
 
@@ -180,7 +186,13 @@ function run_items {
       fi
 
       # Install ansible for system migrations
-      bash scripts/bootstrap-ansible.sh
+      if [[ ! -e "/etc/rpc_deploy" ]]; then
+        bash scripts/bootstrap-ansible.sh
+      else
+        if ! which ansible; then
+          pip install --upgrade --isolated --force-reinstall "ansible==1.9.4"
+        fi
+      fi
 
       pushd ${PB_DIR}
         # Run the tasks in order
@@ -228,7 +240,7 @@ function run_venv_prep {
       PB_DIR="/opt/leap42/openstack-ansible-${KILO_RELEASE}/playbooks"
     fi
 
-    pushd "/opt/leap42/openstack-ansible-${JUNO_RELEASE}/rpc_deployment"
+    pushd "${PB_DIR}"
       openstack-ansible "${UPGRADE_UTILS}/venv-prep.yml" -e "venv_tar_location=/opt/leap42/venvs/openstack-ansible-$1.tgz"
     popd
 }
@@ -236,15 +248,15 @@ function run_venv_prep {
 function build_venv {
     ### The venv build is done using a modern version of the py_pkgs plugin which collects all versions of
     ###  the OpenStack components from a given release. This creates 1 large venv per migratory release.
-    # If the venv archive exists delete it
+    # If the venv archive exists delete it.
     if [[ ! -f "/opt/leap42/venvs/openstack-ansible-$1.tgz" ]]; then
       # Create venv
       virtualenv --never-download --always-copy "/opt/leap42/venvs/openstack-ansible-$1"
       PS1="\\u@\h \\W]\\$" . "/opt/leap42/venvs/openstack-ansible-$1/bin/activate"
-      pip install --upgrade --isolated --force-reinstall pip
+      pip install --upgrade --isolated --force-reinstall
 
-      # Modern Ansible is needed to run the package lookup
-      pip install --isolated "ansible==2.1.1.0"
+      # Modern Ansible is needed to run the package lookups
+      pip install --isolated "ansible==2.1.1.0" "mysql-python" "vine"
 
       # Get package dump from the OSA release
       PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
@@ -254,8 +266,9 @@ packages = json.loads("""$PKG_DUMP""")
 remote_packages = packages[0]['remote_packages']
 print(' '.join([i for i in remote_packages if 'openstack' in i]))
 EOC)
-      pip install --isolated $PACKAGES mysql-python vine
+      pip install --isolated $PACKAGES
       deactivate
+
       # Create venv archive
       pushd /opt/leap42/venvs
         find "openstack-ansible-$1" -name '*.pyc' -exec rm {} \;
