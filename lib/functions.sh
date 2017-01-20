@@ -95,6 +95,12 @@ function run_lock {
 }
 
 function system_bootstrap {
+    if [[ -d "/opt/ansible-runtime" ]]; then
+      rm -rf "/opt/ansible-runtime"
+    else
+      find  /usr/local/lib/python2.7/dist-packages -name '*.dist-info' -exec rm -rf {} \;
+    fi
+
     # If there's a pip.conf file, move it out of the way
     if [[ -f "${HOME}/.pip/pip.conf" ]]; then
       mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
@@ -104,10 +110,6 @@ function system_bootstrap {
     while pip uninstall -y ansible > /dev/null; do
       notice "Removed System installed Ansible"
     done
-
-    if [[ -d "/opt/ansible-runtime" ]]; then
-      rm -rf "/opt/ansible-runtime"
-    fi
 
     pushd "$1"
       # Install the releases global requirements
