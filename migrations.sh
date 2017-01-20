@@ -31,7 +31,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-poweroff.leap" ]]; then
     link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   fi
   RUN_TASKS=()
-  RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml || true")
+  RUN_TASKS+=("${UPGRADE_UTILS}/power-down.yml")
   run_items "/opt/openstack-ansible"
   tag_leap_success "poweroff"
 fi

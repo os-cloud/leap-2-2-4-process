@@ -41,3 +41,4 @@
         - glance
         - keystone
         - apache
+      failed_when: false
