@@ -21,8 +21,8 @@
 set -e -u -v
 
 ## Main ----------------------------------------------------------------------
-source lib/functions.sh
 source lib/vars.sh
+source lib/functions.sh
 
 ### Run the DB migrations
 # Stop the services to ensure DB and application consistency

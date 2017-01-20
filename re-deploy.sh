@@ -21,8 +21,8 @@
 set -e -u -v
 
 ## Main ----------------------------------------------------------------------
-source lib/functions.sh
 source lib/vars.sh
+source lib/functions.sh
 
 ### Run the redeploy tasks
 # Forget about the old Juno neutron agent container in inventory.

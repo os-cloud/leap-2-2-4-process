@@ -94,6 +94,32 @@ function run_lock {
   set -e
 }
 
+function system_bootstrap {
+    # If there's a pip.conf file, move it out of the way
+    if [[ -f "${HOME}/.pip/pip.conf" ]]; then
+      mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
+    fi
+
+    # If ansible is already installed, uninstall it.
+    while pip uninstall -y ansible > /dev/null; do
+      notice "Removed System installed Ansible"
+    done
+
+    if [[ -d "/opt/ansible-runtime" ]]; then
+      rm -rf "/opt/ansible-runtime"
+    fi
+
+    pushd "$1"
+      # Install the releases global requirements
+      if [[ -f "global-requirement-pins.txt" ]]; then
+        pip install --upgrade --isolated --force-reinstall --requirement global-requirement-pins.txt
+      fi
+
+      # Install ansible for system migrations
+      scripts/bootstrap-ansible.sh
+    popd
+}
+
 function pre_flight {
     ## Pre-flight Check ----------------------------------------------------------
     # Clear the screen and make sure the user understands whats happening.
@@ -151,7 +177,7 @@ function pre_flight {
 
 function run_items {
     ### Run system upgrade processes
-    pushd ${1}
+    pushd "$1"
       if [[ -e "playbooks" ]]; then
         PB_DIR="playbooks"
       elif [[ -e "rpc_deployment" ]]; then
@@ -162,36 +188,8 @@ function run_items {
       fi
 
       # Before running anything execute inventory to ensure functionality
-      python "${PB_DIR}/inventory/dynamic_inventory.py" > /dev/null
-
-      # Install the releases global requirements
-      if [[ -f "global-requirement-pins.txt" ]]; then
-        pip install --upgrade --isolated --force-reinstall --requirement global-requirement-pins.txt
-      fi
-
-      # Source the scripts lib
-      source "scripts/scripts-library.sh"
-
-      # If there's a pip.conf file, move it out of the way
-      if [[ -f "${HOME}/.pip/pip.conf" ]] && [[ ! -f "${HOME}/.pip/pip.conf.orignal" ]]; then
-        mv "${HOME}/.pip/pip.conf" "${HOME}/.pip/pip.conf.orignal"
-      fi
-
-      # If ansible is already installed, uninstall it.
-      while pip uninstall -y ansible; do
-        notice "Removed System installed Ansible"
-      done
-      if [[ -d "/opt/ansible-runtime" ]]; then
-        rm -rf /opt/ansible-runtime
-      fi
-
-      # Install ansible for system migrations
-      if [[ ! -e "/etc/rpc_deploy" ]]; then
-        bash scripts/bootstrap-ansible.sh
-      else
-        if ! which ansible; then
-          pip install --upgrade --isolated --force-reinstall "ansible==1.9.4"
-        fi
+      if [[ -f "${PB_DIR}/inventory/dynamic_inventory.py" ]]; then
+        python "${PB_DIR}/inventory/dynamic_inventory.py" > /dev/null
       fi
 
       pushd ${PB_DIR}
@@ -209,9 +207,9 @@ function clone_release {
     if [[ -d "/opt/leap42/openstack-ansible-$1" ]]; then
       rm -rf "/opt/leap42/openstack-ansible-$1"
     fi
-    git clone https://git.openstack.org/openstack/openstack-ansible /opt/leap42/openstack-ansible-$1
-    pushd /opt/leap42/openstack-ansible-$1
-      git checkout $1
+    git clone https://git.openstack.org/openstack/openstack-ansible "/opt/leap42/openstack-ansible-$1"
+    pushd "/opt/leap42/openstack-ansible-$1"
+      git checkout "$1"
     popd
 }
 

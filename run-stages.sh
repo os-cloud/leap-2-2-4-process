@@ -21,8 +21,8 @@
 set -e -u -v
 
 ## Main ----------------------------------------------------------------------
-source lib/functions.sh
 source lib/vars.sh
+source lib/functions.sh
 
 ## Stages --------------------------------------------------------------------
 pre_flight

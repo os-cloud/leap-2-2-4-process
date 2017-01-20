@@ -21,8 +21,8 @@
 set -e -u -v
 
 ## Main ----------------------------------------------------------------------
-source lib/functions.sh
 source lib/vars.sh
+source lib/functions.sh
 
 # Clone the Juno release so we have a clean copy of the source code.
 if [[ ! -f "/opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap" ]]; then
@@ -56,13 +56,15 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
 fi
 
+system_bootstrap "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+
 if [[ -e "/etc/rpc_deploy" ]]; then
-  CURRENT_RELEASE="${JUNO_RELEASE}"
+  RELEASE="${JUNO_RELEASE}"
 else
-  CURRENT_RELEASE="${KILO_RELEASE}"
+  RELEASE="${NEWTON_RELEASE}"
 fi
 
 RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
-run_items "/opt/leap42/openstack-ansible-${CURRENT_RELEASE}"
+run_items "/opt/leap42/openstack-ansible-${RELEASE}"
