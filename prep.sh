@@ -56,7 +56,8 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
 fi
 
-system_bootstrap "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+system_bootstrap "/opt/openstack-ansible"
 
 if [[ -e "/etc/rpc_deploy" ]]; then
   RELEASE="${JUNO_RELEASE}"

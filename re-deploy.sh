@@ -42,7 +42,11 @@ RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
 RUN_TASKS+=("setup-infrastructure.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
+
+# This will need to be broken out
 RUN_TASKS+=("setup-openstack.yml")
+# This will need to be broken out
+
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
 run_items "/opt/openstack-ansible"
 ### Run the redeploy tasks

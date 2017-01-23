@@ -31,6 +31,11 @@ for i in $(ls -1 ${MAIN_PATH}/etc/openstack_deploy/env.d/);do
   fi
 done
 
+# Enable the old ha tool in neutron
+if ! grep '^neutron_legacy_ha_tool_enabled' /etc/openstack_deploy/user_variables.yml;then
+  echo 'neutron_legacy_ha_tool_enabled: true' | tee -a /etc/openstack_deploy/user_variables.yml
+fi
+
 # Set the rabbitmq cluster name if its not set to something else.
 if ! grep '^rabbit_cluster_name\:' /etc/openstack_deploy/user_variables.yml;then
   echo 'rabbit_cluster_name: rpc' | tee -a /etc/openstack_deploy/user_variables.yml
