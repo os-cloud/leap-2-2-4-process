@@ -97,12 +97,11 @@ git clone --branch leapfrog https://github.com/os-cloud/leapfrog-juno-playbooks 
 Finally, run the bootstrap script and the haproxy and setup playbooks to deploy the cloud environment.
 
 ``` bash
-cd /opt/openstack-ansible/rpc_deployment
-
+cd /opt/openstack-ansible
 ./scripts/bootstrap-ansible.sh
 
+cd rpc_deployment
 openstack-ansible playbooks/haproxy-install.yml
-
 openstack-ansible playbooks/setup-everything.yml
 ```
 
@@ -114,8 +113,18 @@ cd /opt/openstack-ansible/rpc_deployment
 ansible -m script -a /opt/openstack-ansible/scripts/setup-openstack-for-test.sh 'utility_all[0]'
 ```
 
-The previous script will create new flavors, L2 and L3 networks, routers, setup security groups, create test images, 2 L2 network test VMs, 2 L3 network test VMs w/ floating IPs, 2 Cinder-volume test VMs, 2 new cinder volumes which will be attached to the Cinder-volume test VMs, and upload a mess of files into a Test-Swift container.
+The previous script will create the following:
 
+  * New flavors
+  * Neutron L2 and L3 networks
+  * Neutron routers
+  * Setup security groups
+  * Create test images
+  * 2 L2 network test VMs
+  * 2 L3 network test VMs w/ floating IPs
+  * 2 Cinder-volume test VMs
+  * 2 new cinder volumes which will be attached to the Cinder-volume test VMs
+  * Upload an assortment of files into a Test-Swift container
 
 Once the cloud is operational it's recommended that images be created so that the environment can be
 reverted to a previous state should there ever be a need. See
