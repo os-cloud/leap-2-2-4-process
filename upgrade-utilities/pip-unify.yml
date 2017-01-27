@@ -20,10 +20,10 @@
   vars:
     pip_upstream_url: "https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py"
   tasks:
-    - name: Copy global requirement global-requirement-pins
+    - name: "Copy global requirement global-requirement-pins"
       copy:
-        src: /opt/leap42/openstack-ansible-{{ release_version }}/global-requirement-pins.txt
-        dest: /tmp/global-requirement-pins.txt
+        src: "/opt/leap42/openstack-ansible-{{ release_version }}/global-requirement-pins.txt"
+        dest: "/tmp/global-requirement-pins.txt"
 
     - name: Get Modern PIP
       get_url:
@@ -57,7 +57,4 @@
       shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*"
 
     - name: get get-pip.py
-        python /opt/get-pip.py pip setuptools wheel \
-          --force-reinstall \
-          --upgrade \
-          --constraint /tmp/global-requirement-pins.txt
+      shell: "python /opt/get-pip.py pip setuptools wheel --force-reinstall --upgrade --constraint /tmp/global-requirement-pins.txt"
