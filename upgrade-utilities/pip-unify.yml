@@ -19,6 +19,7 @@
   user: root
   vars:
     pip_upstream_url: "https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py"
+    pip_validate_certs: true
   tasks:
     - name: "Copy global requirement global-requirement-pins"
       copy:
