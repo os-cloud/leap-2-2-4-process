@@ -34,7 +34,7 @@ SCRIPTS_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}/scripts" \
 
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
-RUN_TASKS+=("pip-unify.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
