@@ -67,7 +67,7 @@ RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
 
 # temp upgrade ansible is used to ensure 1.9.x compat
-PS1="\\u@\h \\W]\\$" . "/opt/ansible-upgrade/bin/activate"
+PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
 run_items "/opt/leap42/openstack-ansible-${RELEASE}"
 deactivate
 

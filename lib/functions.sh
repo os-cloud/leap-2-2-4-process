@@ -178,12 +178,12 @@ function pre_flight {
       python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade
     fi
 
-    if [[ ! -d "/opt/ansible-upgrade" ]]; then
-      virtualenv /opt/ansible-upgrade/bin/activate
+    if [[ ! -d "/opt/ansible-runtime" ]]; then
+      virtualenv /opt/ansible-runtime/bin/activate
     fi
 
-    PS1="\\u@\h \\W]\\$" . "/opt/ansible-upgrade/bin/activate"
-    pip install "ansible==1.9.3" --force-reinstall --upgrade
+    PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
+    pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade
     deactivate
 }
 
