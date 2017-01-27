@@ -56,9 +56,6 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
 fi
 
-link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
-system_bootstrap "/opt/openstack-ansible"
-
 if [[ -e "/etc/rpc_deploy" ]]; then
   RELEASE="${JUNO_RELEASE}"
 else
@@ -69,3 +66,6 @@ RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
 run_items "/opt/leap42/openstack-ansible-${RELEASE}"
+
+link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
+system_bootstrap "/opt/openstack-ansible"

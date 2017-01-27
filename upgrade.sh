@@ -32,7 +32,7 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
   notice 'Running kilo leap'
   link_release "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
   pushd "/opt/leap42/openstack-ansible-${KILO_RELEASE}"
-    if [[ -d "rpc_deploy" ]]; then
+    if [[ -d "/etc/rpc_deploy" ]]; then
       SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/create-new-openstack-deploy-structure.sh
     fi
     ${UPGRADE_SCRIPTS}/juno-rpc-extras-create.py
@@ -46,6 +46,13 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${KILO_RELEASE}.leap" ]]; then
       if [ ! -f "/etc/openstack_deploy/conf.d/repo-servers.yml" ];then
         ${UPGRADE_SCRIPTS}/juno-kilo-add-repo-infra.py
       fi
+    fi
+    # In Kilo+ we need to mark the network used for container ssh and management.
+    if ! grep -q "is_container_address" /etc/openstack_deploy/openstack_user_config.yml; then
+      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_container_address: true' /etc/openstack_deploy/openstack_user_config.yml
+    fi
+    if ! grep -q "is_ssh_address" /etc/openstack_deploy/openstack_user_config.yml; then
+      sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_ssh_address: true' /etc/openstack_deploy/openstack_user_config.yml
     fi
     ${UPGRADE_SCRIPTS}/juno-is-metal-preserve.py
     SCRIPTS_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}/scripts" MAIN_PATH="/opt/leap42/openstack-ansible-${KILO_RELEASE}" ${UPGRADE_SCRIPTS}/old-variable-remove.sh
@@ -86,14 +93,6 @@ fi
 # Run tasks
 if [[ ! -f "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}.leap" ]]; then
   notice 'Running mitaka leap'
-  # In mitaka we need to mark the network used for container ssh and management.
-  if ! grep -q "is_container_address" /etc/openstack_deploy/openstack_user_config.yml; then
-    sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_container_address: true' /etc/openstack_deploy/openstack_user_config.yml
-  fi
-  if ! grep -q "is_ssh_address" /etc/openstack_deploy/openstack_user_config.yml; then
-    sed -i.bak '/container_bridge: "br-mgmt"/a \ \ \ \ \ \ \ \ is_ssh_address: true' /etc/openstack_deploy/openstack_user_config.yml
-  fi
-
   link_release "/opt/leap42/openstack-ansible-${MITAKA_RELEASE}"
   UPGRADE_PLAYBOOKS="${UPGRADE_UTILS}-mitaka/playbooks"
   RUN_TASKS=()
