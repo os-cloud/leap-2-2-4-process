@@ -27,17 +27,3 @@
       file:
         path: "/etc/apt/apt.conf.d/00apt-cacher-proxy"
         state: "absent"
-
-    - name: Copy global requirement global-requirement-pins
-      copy:
-        src: /opt/leap42/openstack-ansible-{{ release_version }}/global-requirement-pins.txt
-        dest: /tmp/global-requirement-pins.txt
-
-    - name: Upgrade and unify pip everywhere
-      shell: |
-        wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
-        rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-        python /opt/get-pip.py pip setuptools wheel \
-          --force-reinstall \
-          --upgrade \
-          --constraint /tmp/global-requirement-pins.txt
