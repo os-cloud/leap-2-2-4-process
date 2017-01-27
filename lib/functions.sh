@@ -182,7 +182,7 @@ function pre_flight {
       virtualenv /opt/ansible-upgrade/bin/activate
     fi
 
-    source /opt/ansible-upgrade/bin/activate
+    PS1="\\u@\h \\W]\\$" . "/opt/ansible-upgrade/bin/activate"
     pip install "ansible==1.9.3" --force-reinstall --upgrade
     deactivate
 }
