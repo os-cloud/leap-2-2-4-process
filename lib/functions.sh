@@ -173,11 +173,18 @@ function pre_flight {
 
     # Upgrade pip if it's needed
     if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "7.1.0"; then
-      pip install --upgrade --isolated "pip==7.1.0"
+      wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
+      rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
+      python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade
     fi
 
-    # Install virtual env for building migration venvs
-    pip install --upgrade --isolated "virtualenv==15.1.0"
+    if [[ ! -d "/opt/ansible-upgrade" ]]; then
+      virtualenv /opt/ansible-upgrade/bin/activate
+    fi
+
+    source /opt/ansible-upgrade/bin/activate
+    pip install "ansible==1.9.3" --force-reinstall --upgrade
+    deactivate
 }
 
 function run_items {
@@ -207,14 +214,25 @@ function run_items {
 }
 
 function clone_release {
-    ### The clone release function clones everything from gerrit into the leap42 directory as needed.
-    ###  Once cloned the method will perform a checkout of the branch, tag, or commit.
-    if [[ -d "/opt/leap42/openstack-ansible-$1" ]]; then
-      rm -rf "/opt/leap42/openstack-ansible-$1"
+    # If the git directory is not present clone the source into place at the given directory
+    if [[ ! -d "/opt/leap42/openstack-ansible-base/.git" ]]; then
+      git clone https://git.openstack.org/openstack/openstack-ansible "/opt/leap42/openstack-ansible-base"
     fi
-    git clone https://git.openstack.org/openstack/openstack-ansible "/opt/leap42/openstack-ansible-$1"
+
+    # The clone release function clones everything from upstream into the leap42 directory as needed.
+    if [[ ! -d "/opt/leap42/openstack-ansible-$1" ]]; then
+      cp -R "/opt/leap42/openstack-ansible-base" "/opt/leap42/openstack-ansible-$1"
+    fi
+
+    # Once cloned the method will perform a checkout of the branch, tag, or commit.
+    #  Enter the clone directory and checkout the given branch, If the given checkout has an
+    #  "ignore-changes.marker" file present the checkout will be skipped.
     pushd "/opt/leap42/openstack-ansible-$1"
-      git checkout "$1"
+      if [[ -f "ignore-changes.marker" ]]; then
+        git clean -qfdx
+        git fetch --all
+        git checkout "$1"
+      fi
     popd
 }
 
