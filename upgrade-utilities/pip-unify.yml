@@ -1,0 +1,63 @@
+---
+# Copyright 2015, Rackspace US, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: Unify pip utils
+  hosts: hosts
+  gather_facts: false
+  user: root
+  vars:
+    pip_upstream_url: "https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py"
+  tasks:
+    - name: Copy global requirement global-requirement-pins
+      copy:
+        src: /opt/leap42/openstack-ansible-{{ release_version }}/global-requirement-pins.txt
+        dest: /tmp/global-requirement-pins.txt
+
+    - name: Get Modern PIP
+      get_url:
+        url: "{{ pip_upstream_url }}"
+        dest: "/opt/get-pip.py"
+        force: "yes"
+        validate_certs: "{{ pip_validate_certs }}"
+      register: get_pip
+      until: get_pip | success
+      failed_when: false
+      retries: 5
+      delay: 2
+      tags:
+        - pip-install-script
+
+    - name: Get Modern PIP using fallback URL
+      get_url:
+        url: "{{ pip_fallback_url }}"
+        dest: "/opt/get-pip.py"
+        force: "yes"
+        validate_certs: "{{ pip_validate_certs }}"
+      when: get_pip | failed
+      register: get_pip_fallback
+      until: get_pip_fallback | success
+      retries: 5
+      delay: 2
+      tags:
+        - pip-install-script
+
+    - name: purge old pip utils
+      shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*"
+
+    - name: get get-pip.py
+        python /opt/get-pip.py pip setuptools wheel \
+          --force-reinstall \
+          --upgrade \
+          --constraint /tmp/global-requirement-pins.txt

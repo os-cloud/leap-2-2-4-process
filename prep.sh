@@ -56,20 +56,23 @@ if [[ ! -f "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap" ]]; then
   touch "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}-prep.leap"
 fi
 
-if [[ -d "/etc/rpc_deploy" ]]; then
-  RELEASE="${JUNO_RELEASE}"
-else
-  RELEASE="${NEWTON_RELEASE}"
-fi
-
 RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/cinder-volume-container-lvm-check.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-backup.yml")
 
-# temp upgrade ansible is used to ensure 1.9.x compat
+if [[ -d "/etc/rpc_deploy" ]]; then
+  RELEASE="${JUNO_RELEASE}"
+  export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/rpc_deployment/inventory"
+else
+  RELEASE="${NEWTON_RELEASE}"
+  export ANSIBLE_INVENTORY="/opt/leap42/openstack-ansible-${RELEASE}/playbooks/inventory"
+fi
+
+# temp upgrade ansible is used to ensure 1.9.x compat.
 PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
 run_items "/opt/leap42/openstack-ansible-${RELEASE}"
 deactivate
+unset ANSIBLE_INVENTORY
 
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 system_bootstrap "/opt/openstack-ansible"

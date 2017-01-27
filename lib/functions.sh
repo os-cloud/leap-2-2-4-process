@@ -73,13 +73,12 @@ function run_lock {
       failure "******************** failure ********************"
       failure "The upgrade script has encountered a failure."
       failure "Failed on task \"$run_item\""
-      failure "Re-run the run-upgrade.sh script, or"
-      failure "execute the remaining tasks manually:"
+      failure "Execute the remaining tasks manually:"
       # NOTE:
-      # List the remaining, incompleted tasks from the tasks array.
-      # Using seq to genertate a sequence which starts from the spot
+      # List the remaining, in-completed tasks from the tasks array.
+      # Using seq to generate a sequence which starts from the spot
       # where previous exception or failures happened.
-      # run the tasks in order
+      # run the tasks in order.
       for item in ${FAILURES_LIST}; do
         if [ -n "${RUN_TASKS[$item]}" ]; then
           warning "openstack-ansible ${RUN_TASKS[$item]}"
@@ -178,10 +177,11 @@ function pre_flight {
       python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade
     fi
 
-    if [[ ! -d "/opt/ansible-runtime" ]]; then
-      virtualenv /opt/ansible-runtime/bin/activate
+    if [[ -d "/opt/ansible-runtime" ]]; then
+      rm -rf "/opt/ansible-runtime"
     fi
 
+    virtualenv /opt/ansible-runtime
     PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
     pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade
     deactivate
