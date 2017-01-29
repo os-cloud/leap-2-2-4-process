@@ -55,7 +55,10 @@
         - pip-install-script
 
     - name: purge old pip utils
-      shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*"
-
-    - name: get get-pip.py
-      shell: "python /opt/get-pip.py pip setuptools wheel --force-reinstall --upgrade --constraint /tmp/global-requirement-pins.txt"
+      shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{{ item }}*"
+      with_items:
+        - setuptools
+        - wheel
+        - pip
+        - distutils
+        - packaging

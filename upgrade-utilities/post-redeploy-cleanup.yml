@@ -13,23 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: Apply cinder changes with cinder-manage
-  hosts: cinder_all[0]
-  user: root
-  tasks:
-    - name: Move the cinder volumes running in containers to new hostnames
-      shell: |
-        . /openstack/venvs/cinder-{{openstack_release}}/bin/activate
-        cinder-manage service list \
-          | awk '/volume.*_container.*XXX/{print $2 }'\
-          | while IFS=@ read cinderhost cinderbackend; do
-            cinder-manage volume update_host \
-              --currenthost $cinderhost@$cinderbackend \
-              --newhost ${cinderhost//_/-}@$cinderbackend;
-            done
-      args:
-        executable: /bin/bash
-
 - name: Disable/delete the services with CLIs
   hosts: utility_all[0]
   user: root
@@ -119,13 +102,3 @@
             sleep 1
             neutron port-delete $portid
             done
-
-- name: Remove the reminent neutron agent containers
-  hosts: "hosts"
-  gather_facts: false
-  user: root
-  tasks:
-    - name: Search for and destroy reminent RPC grouped containers
-      shell: >-
-        lxc-ls -f | awk '/rpc/ {print $1}' | xargs -n 1 lxc-destroy -fn
-      failed_when: false

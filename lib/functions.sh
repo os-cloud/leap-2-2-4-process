@@ -277,7 +277,7 @@ function build_venv {
       pip install --upgrade --isolated --force-reinstall
 
       # Modern Ansible is needed to run the package lookups
-      pip install --isolated "ansible==2.1.1.0" "mysql-python" "vine"
+      pip install --isolated "ansible==2.1.1.0" "mysql-python" "vine" "pymysql"
 
       # Get package dump from the OSA release
       PKG_DUMP=$(python /opt/leap42/py_pkgs.py /opt/leap42/openstack-ansible-$1/playbooks/defaults/repo_packages)
