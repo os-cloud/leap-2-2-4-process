@@ -26,11 +26,13 @@
          WHERE CCSA.collation_name = T.table_collation AND CCSA.CHARACTER_SET_NAME = 'utf8'
          AND CCSA.COLLATION_NAME = 'utf8_unicode_ci';"
       register: utf8_unicode_ci_tables
+
     - name: Disable global foreign key checks
       command: >
         mysql -e
         "SET GLOBAL FOREIGN_KEY_CHECKS = 0;"
       when: utf8_unicode_ci_tables.stdout_lines | length > 0
+
     - name: Convert tables to utf8_general_ci collation
       command: >
        mysql -e
@@ -38,17 +40,20 @@
          {{ item.split()[0] }}
       with_items: "{{ utf8_unicode_ci_tables.stdout_lines }}"
       when: item | search("^(?!table_schema)\w+\t\w+$")
+
     - name: Enable global foreign key checks
       command: >
         mysql -e
         "SET GLOBAL FOREIGN_KEY_CHECKS = 1;"
       when: utf8_unicode_ci_tables.stdout_lines | length > 0
+
     - name: Find databases with utf8_unicode_ci collation
       command: >
         mysql -e
         "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA
          WHERE DEFAULT_CHARACTER_SET_NAME = 'utf8' AND DEFAULT_COLLATION_NAME = 'utf8_unicode_ci';"
       register: utf8_unicode_ci_databases
+
     - name: Convert databases to utf8_general_ci collation
       command: >
         mysql -e

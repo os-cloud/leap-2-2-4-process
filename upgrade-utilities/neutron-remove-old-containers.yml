@@ -22,6 +22,8 @@
       shell: >-
         lxc-ls -f | awk '/rpc/ {print $1}' | xargs -n 1 lxc-destroy -fn
       failed_when: false
+      args:
+        executable: /bin/bash
 
 - name: Remove the reminent neutron agent containers
   hosts: "hosts"
@@ -33,3 +35,5 @@
         . /root/openrc
         /opt/neutron-ha-tool.py --l3-agent-migrate --now --insecure
         /opt/neutron-ha-tool.py --replicate-dhcp --now --insecure
+      args:
+        executable: /bin/bash

@@ -35,18 +35,40 @@ SCRIPTS_PATH="/opt/leap42/openstack-ansible-${NEWTON_RELEASE}/scripts" \
 link_release "/opt/leap42/openstack-ansible-${NEWTON_RELEASE}"
 RUN_TASKS=()
 RUN_TASKS+=("${UPGRADE_UTILS}/pip-unify.yml -e release_version=\"${NEWTON_RELEASE}\"")
+
 RUN_TASKS+=("${UPGRADE_UTILS}/db-stop.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/ansible_fact_cleanup.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/destroy-old-containers.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/nova-libvirt-fix.yml")
+
 RUN_TASKS+=("lxc-hosts-setup.yml")
 RUN_TASKS+=("lxc-containers-create.yml")
+
 RUN_TASKS+=("setup-infrastructure.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 
-# This will need to be broken out
-RUN_TASKS+=("setup-openstack.yml")
-# This will need to be broken out
+RUN_TASKS+=("os-keystone-install.yml")
+RUN_TASKS+=("os-glance-install.yml")
+RUN_TASKS+=("os-cinder-install.yml")
+RUN_TASKS+=("os-nova-install.yml")
+
+RUN_TASKS+=("os-neutron-install.yml")
+RUN_TASKS+=("${UPGRADE_UTILS}/neutron-remove-old-containers.yml")
+
+RUN_TASKS+=("os-heat-install.yml")
+RUN_TASKS+=("os-horizon-install.yml")
+RUN_TASKS+=("os-ceilometer-install.yml")
+RUN_TASKS+=("os-aodh-install.yml")
+
+if grep -rni "^gnocchi_storage_driver" /etc/openstack_deploy/*.{yaml,yml} | grep -qw "swift"; then
+  RUN_TASKS+=("os-gnocchi-install.yml -e gnocchi_identity_only=true")
+fi
+
+RUN_TASKS+=("os-swift-install.yml")
+RUN_TASKS+=("os-gnocchi-install.yml")
+RUN_TASKS+=("os-ironic-install.yml")
+RUN_TASKS+=("os-magnum-install.yml")
+RUN_TASKS+=("os-sahara-install.yml")
 
 RUN_TASKS+=("${UPGRADE_UTILS}/post-redeploy-cleanup.yml")
 run_items "/opt/openstack-ansible"

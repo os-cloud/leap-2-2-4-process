@@ -52,6 +52,8 @@
         {{ item.name }} {{ item.list_command}} | awk '{{ item.awk_filter }}{print {{ item.awk_print_column }} }'
       register: to_disable
       with_items: "{{ services }}"
+      args:
+        executable: /bin/bash
 
     - name: showing the list of items
       debug:
@@ -68,6 +70,8 @@
       with_subelements:
         - to_disable.results
         - stdout_lines
+      args:
+        executable: /bin/bash
 
 - name: Apply cinder changes with cinder-manage
   hosts: cinder_all[0]
@@ -102,3 +106,5 @@
             sleep 1
             neutron port-delete $portid
             done
+      args:
+        executable: /bin/bash

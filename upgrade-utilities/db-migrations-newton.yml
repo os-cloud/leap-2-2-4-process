@@ -55,6 +55,7 @@
             done
       args:
         executable: /bin/bash
+
     - name: Perform service purge
       shell: |
         IFS=$'\n'
