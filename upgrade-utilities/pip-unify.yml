@@ -55,12 +55,6 @@
       retries: 5
       delay: 2
 
-    - name: Remove old dist-info directories
-      raw: >-
-        find /usr/local/lib/python2.7/dist-packages -name '*.dist-info' -exec rm -rf {} \; || true
-      args:
-        executable: /bin/bash
-
     - name: purge old pip utils
       raw: "rm -rf /usr/local/lib/python2.7/dist-packages/{{ item }}*"
       with_items:
