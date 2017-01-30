@@ -37,8 +37,6 @@
       failed_when: false
       retries: 5
       delay: 2
-      tags:
-        - pip-install-script
 
     - name: Get Modern PIP using fallback URL
       get_url:
@@ -51,8 +49,6 @@
       until: get_pip_fallback | success
       retries: 5
       delay: 2
-      tags:
-        - pip-install-script
 
     - name: purge old pip utils
       shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{{ item }}*"
@@ -62,3 +58,11 @@
         - pip
         - distutils
         - packaging
+
+    - name: Re-install pip
+      shell: |
+        /usr/bin/python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" "packaging==16.8" \
+            --force-reinstall \
+            --upgrade \
+            --isolated \
+            --constraint /tmp/global-requirement-pins.txt
