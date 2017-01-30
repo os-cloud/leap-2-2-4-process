@@ -100,7 +100,6 @@
       args:
         executable: /bin/bash
 
-
 - name: Cleanup layer2 ports
   gather_facts: no
   hosts: utility_all[0]

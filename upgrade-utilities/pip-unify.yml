@@ -14,17 +14,22 @@
 # limitations under the License.
 
 - name: Unify pip utils
-  hosts: hosts
+  hosts: "hosts:!localhost"
   gather_facts: false
   user: root
   vars:
     pip_upstream_url: "https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py"
     pip_validate_certs: true
   tasks:
-    - name: "Copy global requirement global-requirement-pins"
+    - name: "Copy global requirements"
       copy:
         src: "/opt/leap42/openstack-ansible-{{ release_version }}/global-requirement-pins.txt"
         dest: "/tmp/global-requirement-pins.txt"
+
+    - name: "Copy upgrade requirements"
+      copy:
+        src: "{{ playbook_dir }}/../upgrade-requirements.txt"
+        dest: "/tmp/upgrade-requirements.txt"
 
     - name: Get Modern PIP
       get_url:
@@ -50,19 +55,30 @@
       retries: 5
       delay: 2
 
+    - name: Remove old dist-info directories
+      raw: >-
+        find /usr/local/lib/python2.7/dist-packages -name '*.dist-info' -exec rm -rf {} \; || true
+      args:
+        executable: /bin/bash
+
     - name: purge old pip utils
-      shell: "rm -rf /usr/local/lib/python2.7/dist-packages/{{ item }}*"
+      raw: "rm -rf /usr/local/lib/python2.7/dist-packages/{{ item }}*"
       with_items:
         - setuptools
         - wheel
         - pip
         - distutils
         - packaging
+      args:
+        executable: /bin/bash
 
     - name: Re-install pip
-      shell: |
-        /usr/bin/python /opt/get-pip.py "pip==9.0.1" "virtualenv==15.1.0" "packaging==16.8" \
+      raw: |
+        /usr/bin/python /opt/get-pip.py \
             --force-reinstall \
             --upgrade \
             --isolated \
+            --requirement /tmp/upgrade-requirements.txt \
             --constraint /tmp/global-requirement-pins.txt
+      args:
+        executable: /bin/bash

@@ -35,24 +35,13 @@ function tag_leap_success {
 function run_lock {
   set +e
   run_item="${RUN_TASKS[$1]}"
-  file_part="${run_item}"
-
-  # note(sigmavirus24): this handles tasks like:
-  # "-e 'rabbitmq_upgrade=true' setup-infrastructure.yml"
-  # "/tmp/fix_container_interfaces.yml || true"
-  # so we can get the appropriate basename for the upgrade_marker
-  for part in $run_item; do
-    if [[ "$part" == *.yml ]];then
-      file_part="$part"
-      break
-    fi
-  done
+  file_part="$(echo ${run_item} | sed 's/\s/-/g')"
 
   if [ ! -d  "/etc/openstack_deploy/upgrade-leap" ]; then
       mkdir -p "/etc/openstack_deploy/upgrade-leap"
   fi
 
-  upgrade_marker_file=$(basename "${file_part}" .yml | sed 's/\s/-/g')
+  upgrade_marker_file=$(basename "${file_part}")
   upgrade_marker="/etc/openstack_deploy/upgrade-leap/$upgrade_marker_file.complete"
 
   if [ ! -f "$upgrade_marker" ];then
@@ -66,8 +55,8 @@ function run_lock {
 
     if [ "$playbook_status" == "0" ];then
       RUN_TASKS=("${RUN_TASKS[@]/$run_item}")
-      touch "$upgrade_marker"
-      notice "$run_item has been marked as success"
+      touch "${upgrade_marker}"
+      notice "$run_item has been marked as success at ${upgrade_marker}"
     else
       FAILURES_LIST=$(seq $1 $((${#RUN_TASKS[@]} - 1)))
       failure "******************** failure ********************"
@@ -171,10 +160,10 @@ function pre_flight {
     apt-get -y install liberasurecode-dev > /dev/null
 
     # Upgrade pip if it's needed
-    if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "7.1.0"; then
+    if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
       wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
       rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-      python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade --isolated
+      python /opt/get-pip.py --requirement "${SYSTEM_PATH}/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
     fi
 
     if [[ -d "/opt/ansible-runtime" ]]; then

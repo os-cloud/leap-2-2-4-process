@@ -23,7 +23,8 @@ export NEWTON_RELEASE="${NEWTON_RELEASE:-d47e29b7d8a385773acadb825e37c82d42b3ec2
 
 ## Environment Vars ------------------------------------------------------------------
 export MAIN_PATH="${MAIN_PATH:-/opt/openstack-ansible}"
-export UPGRADE_UTILS="${UPGRADE_UTILS:-$(dirname $(readlink -f $0))/upgrade-utilities}"
+export SYSTEM_PATH="$(dirname $(readlink -f $0))"
+export UPGRADE_UTILS="${UPGRADE_UTILS:-${SYSTEM_PATH}/upgrade-utilities}"
 
 # If the the OpenStack-Ansible system venvs have already been built elsewhere and can be downloaded
 #  set the "VENV_URL" environment variable to the path where the venvs are kept. When running stage1
