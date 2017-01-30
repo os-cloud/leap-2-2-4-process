@@ -19,7 +19,7 @@ export JUNO_RELEASE="${JUNO_RELEASE:-10.1.14}"
 export KILO_RELEASE="${KILO_RELEASE:-11.2.17}"
 export LIBERTY_RELEASE="${LIBERTY_RELEASE:-12.2.8}"
 export MITAKA_RELEASE="${MITAKA_RELEASE:-13.3.11}"
-export NEWTON_RELEASE="${NEWTON_RELEASE:-14.0.4}"
+export NEWTON_RELEASE="${NEWTON_RELEASE:-d47e29b7d8a385773acadb825e37c82d42b3ec27}"  # commit used due to packaging bug caused by setuptools
 
 ## Environment Vars ------------------------------------------------------------------
 export MAIN_PATH="${MAIN_PATH:-/opt/openstack-ansible}"
