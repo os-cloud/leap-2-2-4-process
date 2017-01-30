@@ -87,6 +87,19 @@
             done
       args:
         executable: /bin/bash
+    - name: Move the cinder volumes running in containers to new hostnames
+      shell: |
+        . /openstack/venvs/cinder-{{openstack_release}}/bin/activate
+        cinder-manage service list \
+          | awk '/volume.*_container.*XXX/{print $2 }'\
+          | while IFS=@ read cinderhost cinderbackend; do
+            cinder-manage volume update_host \
+              --currenthost $cinderhost@$cinderbackend \
+              --newhost ${cinderhost//_/-}@$cinderbackend;
+            done
+      args:
+        executable: /bin/bash
+
 
 - name: Cleanup layer2 ports
   gather_facts: no

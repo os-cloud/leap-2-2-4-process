@@ -174,7 +174,7 @@ function pre_flight {
     if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "7.1.0"; then
       wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
       rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-      python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade
+      python /opt/get-pip.py "pip==7.1.0" "virtualenv==15.1.0" --force-reinstall --upgrade --isolated
     fi
 
     if [[ -d "/opt/ansible-runtime" ]]; then
@@ -183,7 +183,7 @@ function pre_flight {
 
     virtualenv /opt/ansible-runtime
     PS1="\\u@\h \\W]\\$" . "/opt/ansible-runtime/bin/activate"
-    pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade
+    pip install "ansible==1.9.3" "netaddr>=0.7.12,<=0.7.13" --force-reinstall --upgrade --isolated
     deactivate
 }
 

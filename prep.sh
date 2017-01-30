@@ -24,6 +24,9 @@ set -e -u -v
 source lib/vars.sh
 source lib/functions.sh
 
+# Execute a preflight check
+pre_flight
+
 # Clone the Juno release so we have a clean copy of the source code.
 if [[ ! -f "/opt/leap42/openstack-ansible-${JUNO_RELEASE}-prep.leap" ]]; then
   clone_release ${JUNO_RELEASE}

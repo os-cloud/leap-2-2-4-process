@@ -25,8 +25,6 @@ source lib/vars.sh
 source lib/functions.sh
 
 ## Stages --------------------------------------------------------------------
-pre_flight
-
 source prep.sh
 source upgrade.sh
 source migrations.sh

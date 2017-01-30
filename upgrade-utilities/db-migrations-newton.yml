@@ -43,19 +43,6 @@
   tasks:
     - name: Perform a cinder DB sync
       command: "{{ venv_path }}/bin/cinder-manage db sync"
-    - name: Move the cinder volumes running in containers to new hostnames
-      shell: |
-        . /openstack/venvs/cinder-{{openstack_release}}/bin/activate
-        cinder-manage service list \
-          | awk '/volume.*_container.*XXX/{print $2 }'\
-          | while IFS=@ read cinderhost cinderbackend; do
-            cinder-manage volume update_host \
-              --currenthost $cinderhost@$cinderbackend \
-              --newhost ${cinderhost//_/-}@$cinderbackend;
-            done
-      args:
-        executable: /bin/bash
-
     - name: Perform service purge
       shell: |
         IFS=$'\n'
