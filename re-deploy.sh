@@ -50,7 +50,15 @@ RUN_TASKS+=("${UPGRADE_UTILS}/db-force-upgrade.yml")
 RUN_TASKS+=("os-keystone-install.yml")
 RUN_TASKS+=("os-glance-install.yml")
 RUN_TASKS+=("os-cinder-install.yml")
+
+
+# The first run will install everything everywhere and restart the nova services
 RUN_TASKS+=("os-nova-install.yml")
+
+# This is being run before hand to ensure a speedy service upgrade to maintain running VMs.
+#  this also works around an issue where very early versions of libvirt may not be fully
+#  replaced on the first run.
+RUN_TASKS+=("os-nova-install.yml --limit nova_compute")
 
 RUN_TASKS+=("os-neutron-install.yml")
 RUN_TASKS+=("${UPGRADE_UTILS}/neutron-remove-old-containers.yml")

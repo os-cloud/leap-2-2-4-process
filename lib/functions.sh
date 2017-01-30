@@ -52,7 +52,7 @@ function run_lock {
       mkdir -p "/etc/openstack_deploy/upgrade-leap"
   fi
 
-  upgrade_marker_file=$(basename ${file_part} .yml)
+  upgrade_marker_file=$(basename "${file_part}" .yml | sed 's/\s/-/g')
   upgrade_marker="/etc/openstack_deploy/upgrade-leap/$upgrade_marker_file.complete"
 
   if [ ! -f "$upgrade_marker" ];then
