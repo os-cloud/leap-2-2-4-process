@@ -159,11 +159,13 @@ function pre_flight {
     apt-get update > /dev/null
     apt-get -y install liberasurecode-dev > /dev/null
 
-    # Upgrade pip if it's needed
+    # Upgrade pip if it's needed. This will re-install pip using the constraints and then
+    #  re-install all of the remaining requirements as needed.
     if dpkg --compare-versions "$(pip --version  | awk '{print $2}')" "lt" "9.0.1"; then
       wget https://raw.githubusercontent.com/pypa/get-pip/430ba37776ae2ad89f794c7a43b90dc23bac334c/get-pip.py -O /opt/get-pip.py
       rm -rf /usr/local/lib/python2.7/dist-packages/{setuptools,wheel,pip,distutils,packaging}*
-      python /opt/get-pip.py --requirement "${SYSTEM_PATH}/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
+      python /opt/get-pip.py --constraint "${SYSTEM_PATH}/upgrade-requirements.txt" --force-reinstall --upgrade --isolated
+      python /opt/get-pip.py --requirement "${SYSTEM_PATH}/upgrade-requirements.txt" --upgrade --isolated
     fi
 
     if [[ -d "/opt/ansible-runtime" ]]; then

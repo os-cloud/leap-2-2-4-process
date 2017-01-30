@@ -28,7 +28,7 @@
 
     - name: "Copy upgrade requirements"
       copy:
-        src: "{{ playbook_dir }}/../upgrade-requirements.txt"
+        src: "{{ playbook_dir }}/../lib/upgrade-requirements.txt"
         dest: "/tmp/upgrade-requirements.txt"
 
     - name: Get Modern PIP
@@ -76,6 +76,15 @@
       raw: |
         /usr/bin/python /opt/get-pip.py \
             --force-reinstall \
+            --upgrade \
+            --isolated \
+            --constraint /tmp/global-requirement-pins.txt
+      args:
+        executable: /bin/bash
+
+    - name: Re-install pip packaging requirements
+      raw: |
+        /usr/bin/python /opt/get-pip.py \
             --upgrade \
             --isolated \
             --requirement /tmp/upgrade-requirements.txt \
