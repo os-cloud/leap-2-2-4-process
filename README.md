@@ -2,7 +2,7 @@
 
 ## Jump upgrade from OpenStack Juno to Newton using OpenStack-Ansible
 
-**This currently a POC**
+==**This currently a POC**==
 
 ### Uses
 
@@ -25,6 +25,18 @@ the shortest possible time while maintaining data-integrity.
     migrate the cinder-volume service to the physical host.
   * **You must** have the Ubuntu Trusty Backports repo enabled before you start.
 
+#### Limitations
+
+  * Upgrading old versions of "libvirt-bin<=1.1" to newer versions of
+    "libvirt-bin>=1.3" in a single step can cause VM downtime.
+  * L3 networks may experience an outage as routers and networks are
+    rebalanced throughout the environment.
+
+#### Recommendations
+
+  * It is recommended all physical hosts be updated to the latest patch release.
+    This can be done using standard package manager tooling.
+
 #### Process
 
 If you need to run everything the script ``run-stages.sh`` will execute
@@ -34,7 +46,7 @@ everything needed to migrate the environment.
 bash ./run-stages.sh
 ```
 
-If you want to preload the stages you can do so by running the various stages
+If you want to pre-load the stages you can do so by running the various scripts
 independently.
 
 ``` bash
@@ -49,7 +61,7 @@ Newton.
 
 ----
 
-## Setting up a Test environment.
+### Setting up a Test environment.
 
 Testing on a multi-node environment can be accomplished using the
 https://github.com/openstack/openstack-ansible-ops/tree/master/multi-node-aio
